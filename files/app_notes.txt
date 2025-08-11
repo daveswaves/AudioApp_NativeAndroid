@@ -1,0 +1,7 @@
+AudioApp/app/build.gradle.kts
+AudioApp/app/src/main/AndroidManifest.xml
+AudioApp/app/src/main/java/com/example/myapp/MainActivity.kt
+AudioApp/app/src/main/res/layout/activity_main.xml
+AudioApp/build.gradle.kts
+AudioApp/gradle.properties
+AudioApp/settings.gradle.kts

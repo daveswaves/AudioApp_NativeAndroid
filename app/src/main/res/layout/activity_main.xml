@@ -55,13 +55,34 @@
         
         <Button
             style="@style/MyButtonStyle"
-            android:id="@+id/starButton"
+            android:id="@+id/bookmarksButton"
             android:layout_width="wrap_content"
             android:layout_height="60dp"
-            android:text="B marks"
+            android:text="Book\nmarks"
             android:layout_marginStart="8dp" />
 
     </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:layout_constraintTop_toBottomOf="@id/buttonRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.8"
+        android:layout_marginTop="20dp">
+
+        <ImageView
+            android:id="@+id/myImageView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/default1"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true" />
+
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

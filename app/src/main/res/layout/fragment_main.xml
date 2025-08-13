@@ -96,15 +96,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.8"
         android:layout_marginTop="18dp"/>
+
+    <!-- Previous / Next buttons -->
+    <Button
+        style="@style/MyButtonStyle"
+        android:id="@+id/prevButton"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="Last"
+        android:textSize="26sp"
+        app:layout_constraintTop_toBottomOf="@id/playButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/nextButton"
+        app:layout_constraintWidth_percent="0.35"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="2dp"/>
+    
+    <Button
+        style="@style/MyButtonStyle"
+        android:id="@+id/nextButton"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="Next"
+        android:textSize="26sp"
+        app:layout_constraintTop_toBottomOf="@id/playButton"
+        app:layout_constraintStart_toEndOf="@id/prevButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.35"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="2dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--
-android:minWidth="160dp"
-android:minHeight="70dp"
-
-android:text="star"
-app:drawableStartCompat="@drawable/ic_star"
-
-android:minWidth="160dp"
-android:minHeight="70dp"
--->

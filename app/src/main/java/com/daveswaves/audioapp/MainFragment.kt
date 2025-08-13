@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
+
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 
@@ -15,6 +17,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+        val hasFolder = prefs.getBoolean("has_selected_folder", false)
+        view.findViewById<ImageView>(R.id.myImageView)
+            .setImageResource(if (hasFolder) R.drawable.books else R.drawable.refresh)
+
 
         val booksButton: Button = view.findViewById(R.id.booksButton)
         booksButton.setOnClickListener {
@@ -72,7 +80,13 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             
             // Save to SharedPreferences
             val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
-            prefs.edit().putString("audiobook_dir", uri.toString()).apply()
+            // prefs.edit().putString("audiobook_dir", uri.toString()).apply()
+            prefs.edit()
+                .putString("audiobook_dir", uri.toString())
+                .putBoolean("has_selected_folder", true)
+                .apply()
+            
+            view?.findViewById<ImageView>(R.id.myImageView)?.setImageResource(R.drawable.books)
 
             // Get list of books immediately
             val books = getAudioBooksFromFolder(uri)

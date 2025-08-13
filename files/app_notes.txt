@@ -148,7 +148,7 @@ recyclerView.adapter = BooksAdapter(books) { bookName ->
 
 AudioApp/app/src/main/java/com/daveswaves/audioapp/(BookmarksFragment.kt|BooksFragment.kt|MainActivity.kt|MainFragment.kt|RecentFilesFragment.kt)
 AudioApp/app/src/main/res/drawable/(default1.png|default2.png)
-AudioApp/app/src/main/res/layout/(activity_main_copy.xml|activity_main.xml|fragment_bookmarks.xml|fragment_books.xml|fragment_main.xml|fragment_recent_files.xml)
+AudioApp/app/src/main/res/layout/(activity_main.xml|fragment_bookmarks.xml|fragment_books.xml|fragment_main.xml|fragment_recent_files.xml)
 AudioApp/app/src/main/res/mipmap-hdpi/(ic_launcher.png|ic_launcher_round.png)
 AudioApp/app/src/main/res/mipmap-mdpi/(ic_launcher.png|ic_launcher_round.png)
 AudioApp/app/src/main/res/mipmap-xhdpi/(ic_launcher.png|ic_launcher_round.png)

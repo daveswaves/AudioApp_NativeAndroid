@@ -1,4 +1,4 @@
-// RecentFilesFragment.kt
+// RecentFragment.kt
 package com.daveswaves.audioapp
 
 import android.os.Bundle
@@ -7,7 +7,7 @@ import android.widget.Button
 // import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 
-class RecentFilesFragment : Fragment(R.layout.fragment_recent_files) {
+class RecentFragment : Fragment(R.layout.fragment_recent) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

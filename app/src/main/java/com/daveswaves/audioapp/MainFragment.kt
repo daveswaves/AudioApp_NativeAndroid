@@ -40,7 +40,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         val recentButton: Button = view.findViewById(R.id.recentButton)
         recentButton.setOnClickListener {
             parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, RecentFilesFragment())
+                .replace(R.id.fragmentContainer, RecentFragment())
                 .addToBackStack(null)
                 .commit()
         }

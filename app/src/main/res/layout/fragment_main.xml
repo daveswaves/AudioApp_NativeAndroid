@@ -84,6 +84,21 @@
             android:adjustViewBounds="true" />
     </androidx.cardview.widget.CardView>
 
+    <!-- Current Chapter Name -->
+    <TextView
+        android:id="@+id/chapterTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No chapter selected"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/coverCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="18dp"/>
+
+
     <!-- Play button -->
     <Button
         android:id="@+id/playButton"
@@ -91,7 +106,7 @@
         android:layout_height="wrap_content"
         android:text="Play"
         android:textSize="36sp"
-        app:layout_constraintTop_toBottomOf="@id/coverCard"
+        app:layout_constraintTop_toBottomOf="@id/chapterTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.8"

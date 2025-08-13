@@ -10,6 +10,7 @@ import android.provider.DocumentsContract
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 
@@ -21,8 +22,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private var audioFiles: List<Uri> = emptyList()
     private var currentIndex = 0  // current chapter index
 
+    private lateinit var chapterTitle: TextView
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        chapterTitle = view.findViewById(R.id.chapterTitle)
 
         // Initialize main image based on saved state (cover > book > refresh)
         val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
@@ -197,25 +202,40 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             }
         }
 
-        audioFiles = files.sortedBy { it.lastPathSegment } // optional: sort alphabetically
+        audioFiles = sortAudioFilesNaturally(files)
+        // audioFiles = files.sortedBy { it.lastPathSegment } // optional: sort alphabetically
         currentIndex = 0
+
+        // Update UI title safely
+        chapterTitle.text = if (audioFiles.isNotEmpty()) {
+            getChapterDisplayName(audioFiles[currentIndex])
+        } else {"Unknown chapter"}
+        // if (audioFiles.isNotEmpty()) {
+        //     val firstName = getChapterDisplayName(audioFiles[currentIndex])
+        //     chapterTitle.text = firstName
+        // }
+    }
+
+    // Clean up chapter names
+    private fun getChapterDisplayName(uri: Uri): String {
+        val name = uri.lastPathSegment ?: return ""
+        return name.substringAfterLast("/").substringBeforeLast(".")
     }
 
     private fun startOrResumeAudio(prefs: android.content.SharedPreferences, button: Button) {
-        if (mediaPlayer == null) {
-            // First-time playback: get first audio file
-            val baseUriString = prefs.getString("audiobook_dir", null)
-            val selectedBook = prefs.getString("selected_book", null)
-            if (baseUriString == null || selectedBook == null) return
+        // Get base folder and selected book
+        val baseUriString = prefs.getString("audiobook_dir", null)
+        val selectedBook = prefs.getString("selected_book", null)
+        if (baseUriString == null || selectedBook == null) return
 
-            val resolver = requireContext().contentResolver
-            val baseUri = Uri.parse(baseUriString)
+        val resolver = requireContext().contentResolver
+        val baseUri = Uri.parse(baseUriString)
 
+        // Only load files if audioFiles list is empty
+        if (audioFiles.isEmpty()) {
             val booksUri = DocumentsContract.buildChildDocumentsUriUsingTree(
                 baseUri, DocumentsContract.getTreeDocumentId(baseUri)
             )
-
-            var firstAudioUri: Uri? = null
 
             resolver.query(
                 booksUri,
@@ -226,9 +246,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                     val docId = cursor.getString(0)
                     val name = cursor.getString(1)
                     if (name == selectedBook) {
-                        val bookFolderUri = DocumentsContract.buildChildDocumentsUriUsingTree(
-                            baseUri, docId
-                        )
+                        val bookFolderUri = DocumentsContract.buildChildDocumentsUriUsingTree(baseUri, docId)
+                        val filesList = mutableListOf<Uri>()
 
                         resolver.query(
                             bookFolderUri,
@@ -239,26 +258,41 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                                 val fileDocId = filesCursor.getString(0)
                                 val fileName = filesCursor.getString(1)
                                 if (fileName.endsWith(".mp3", true) || fileName.endsWith(".m4a", true)) {
-                                    firstAudioUri = DocumentsContract.buildDocumentUriUsingTree(
-                                        baseUri, fileDocId
-                                    )
-                                    break
+                                    val fileUri = DocumentsContract.buildDocumentUriUsingTree(baseUri, fileDocId)
+                                    filesList.add(fileUri)
                                 }
                             }
                         }
+
+                        audioFiles = sortAudioFilesNaturally(filesList)
+                        // audioFiles = filesList.sortedBy { it.lastPathSegment }
+                        currentIndex = 0
+                        break
                     }
                 }
             }
+        }
 
-            firstAudioUri?.let { uri ->
-                mediaPlayer = MediaPlayer().apply {
-                    setDataSource(requireContext(), uri)
-                    prepare()
-                    start()
+        // If no files found, show Unknown
+        if (audioFiles.isEmpty()) {
+            chapterTitle.text = "Unknown chapter"
+            return
+        }
+
+        // Start or resume playback
+        if (mediaPlayer == null) {
+            val uri = audioFiles[currentIndex]
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(requireContext(), uri)
+                prepare()
+                start()
+                setOnCompletionListener {
+                    this@MainFragment.isPlaying = false
+                    button.text = "Play"
                 }
             }
+            chapterTitle.text = getChapterDisplayName(uri)
         } else {
-            // Resume if paused
             mediaPlayer?.start()
         }
 
@@ -267,9 +301,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun playCurrentChapter(playButton: Button) {
+        if (audioFiles.isEmpty()) {
+            chapterTitle.text = "Unknown chapter"
+            return
+        }
+
         mediaPlayer?.release()
+        val uri = audioFiles[currentIndex]
         mediaPlayer = MediaPlayer().apply {
-            setDataSource(requireContext(), audioFiles[currentIndex])
+            setDataSource(requireContext(), uri)
             prepare()
             start()
             setOnCompletionListener {
@@ -277,6 +317,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 playButton.text = "Play"
             }
         }
+
+        chapterTitle.text = getChapterDisplayName(uri)
         isPlaying = true
         playButton.text = "Pause"
     }
@@ -287,64 +329,13 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         button.text = "Play"
     }
 
-    /*
-    private fun playFirstAudioFile(prefs: android.content.SharedPreferences) {
-        val baseUriString = prefs.getString("audiobook_dir", null)
-        val selectedBook = prefs.getString("selected_book", null)
-        if (baseUriString == null || selectedBook == null) return
-
-        val resolver = requireContext().contentResolver
-        val baseUri = Uri.parse(baseUriString)
-
-        val booksUri = DocumentsContract.buildChildDocumentsUriUsingTree(
-            baseUri, DocumentsContract.getTreeDocumentId(baseUri)
-        )
-
-        var firstAudioUri: Uri? = null
-
-        resolver.query(
-            booksUri,
-            arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME),
-            null, null, null
-        )?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val docId = cursor.getString(0)
-                val name = cursor.getString(1)
-                if (name == selectedBook) {
-                    val bookFolderUri = DocumentsContract.buildChildDocumentsUriUsingTree(
-                        baseUri, docId
-                    )
-
-                    resolver.query(
-                        bookFolderUri,
-                        arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME),
-                        null, null, null
-                    )?.use { filesCursor ->
-                        while (filesCursor.moveToNext()) {
-                            val fileDocId = filesCursor.getString(0)
-                            val fileName = filesCursor.getString(1)
-                            if (fileName.endsWith(".mp3", true) || fileName.endsWith(".m4a", true)) {
-                                firstAudioUri = DocumentsContract.buildDocumentUriUsingTree(
-                                    baseUri, fileDocId
-                                )
-                                break
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        firstAudioUri?.let { uri ->
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(requireContext(), uri)
-                prepare()
-                start()
-            }
-        }
+    private fun sortAudioFilesNaturally(files: List<Uri>): List<Uri> {
+        return files.sortedWith(compareBy { uri ->
+            val name = uri.lastPathSegment ?: ""
+            // Extract first number in filename, fallback to Int.MAX_VALUE
+            Regex("""\d+""").find(name)?.value?.toInt() ?: Int.MAX_VALUE
+        })
     }
-    */
 
     override fun onDestroy() {
         super.onDestroy()

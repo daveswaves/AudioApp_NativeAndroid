@@ -1,3 +1,4 @@
+// BooksAdapter.kt
 package com.daveswaves.audioapp
 
 import android.view.LayoutInflater
@@ -5,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+// import android.widget.Toast
 
 class BooksAdapter(
     private val books: List<String>,
@@ -32,7 +34,12 @@ class BooksAdapter(
     }
 
     override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
-        holder.bookTitle.text = books[position]
+        val bookName = books[position]
+        holder.bookTitle.text = bookName
+        holder.itemView.setOnClickListener {
+            // Toast.makeText(holder.itemView.context, "Clicked $bookName", Toast.LENGTH_SHORT).show()
+            onClick(bookName)
+        }
     }
 
     override fun getItemCount(): Int = books.size

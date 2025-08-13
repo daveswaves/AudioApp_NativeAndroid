@@ -60,11 +60,11 @@
             android:layout_height="60dp"
             android:text="Book\nmarks"
             android:layout_marginStart="8dp" />
-
     </LinearLayout>
 
     <!-- book cover view port -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/coverCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:cardCornerRadius="16dp"
@@ -82,9 +82,20 @@
             android:src="@drawable/refresh"
             android:scaleType="centerCrop"
             android:adjustViewBounds="true" />
-
     </androidx.cardview.widget.CardView>
 
+    <!-- Play button -->
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Play"
+        android:textSize="36sp"
+        app:layout_constraintTop_toBottomOf="@id/coverCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.8"
+        android:layout_marginTop="18dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 <!--

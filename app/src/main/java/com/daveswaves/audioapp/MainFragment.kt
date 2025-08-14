@@ -53,6 +53,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         
         private val SUPPORTED_AUDIO_FORMATS = setOf("mp3", "m4a")
         private const val POSITION_UPDATE_INTERVAL = 5000L // Update position every 5 seconds
+        private const val SEEK_DURATION_MS = 60000 // 1 minute in milliseconds
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,6 +113,14 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
         view?.findViewById<Button>(R.id.prevButton)?.setOnClickListener {
             playPreviousChapter()
+        }
+
+        view?.findViewById<Button>(R.id.seekBackButton)?.setOnClickListener {
+            seekBackward()
+        }
+
+        view?.findViewById<Button>(R.id.seekForwardButton)?.setOnClickListener {
+            seekForward()
         }
 
         view?.findViewById<Button>(R.id.booksButton)?.setOnClickListener {
@@ -362,6 +371,42 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
+    private fun seekBackward() {
+        val player = mediaPlayer ?: return
+        
+        val currentPosition = player.currentPosition
+        val newPosition = (currentPosition - SEEK_DURATION_MS).coerceAtLeast(0)
+        
+        player.seekTo(newPosition)
+        saveCurrentPosition() // Update saved position immediately
+    }
+
+    private fun seekForward() {
+        val player = mediaPlayer ?: return
+        
+        val currentPosition = player.currentPosition
+        val duration = player.duration
+        val newPosition = (currentPosition + SEEK_DURATION_MS).coerceAtMost(duration)
+        
+        player.seekTo(newPosition)
+        saveCurrentPosition() // Update saved position immediately
+        
+        // If we've reached the end, complete the chapter
+        if (newPosition >= duration - 1000) { // 1 second buffer
+            player.pause()
+            isPlaying = false
+            playButton.text = "Play"
+            stopPositionTracking()
+            clearSavedPositionForCurrentChapter()
+            
+            // Auto-advance to next chapter
+            if (currentIndex < audioFiles.size - 1) {
+                currentIndex = (currentIndex + 1) % audioFiles.size
+                playCurrentChapter(restorePosition = false)
+            }
+        }
+    }
+
     private fun navigateToChaptersFragment() {
         if (audioFiles.isNotEmpty()) {
             val chaptersFragment = ChaptersFragment.newInstance(
@@ -454,10 +499,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             val position = player.currentPosition
             val chapterName = getChapterDisplayName(audioFiles[currentIndex])
             
-            prefs.edit()
-                .putInt(getPositionKey(bookName, chapterName), position)
-                .putInt(getChapterIndexKey(bookName), currentIndex)
-                .apply()
+            if (position >= 0) {
+                prefs.edit()
+                    .putInt(getPositionKey(bookName, chapterName), position)
+                    .putInt(getChapterIndexKey(bookName), currentIndex)
+                    .apply()
+            }
         }
     }
 

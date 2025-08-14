@@ -140,4 +140,34 @@
         app:layout_constraintWidth_percent="0.35"
         android:layout_marginTop="4dp"
         android:layout_marginStart="2dp"/>
+    
+    <!-- Seek backward / forward buttons -->
+    <Button
+        style="@style/MyButtonStyle"
+        android:id="@+id/seekBackButton"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:text="-1M"
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@id/prevButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/seekForwardButton"
+        app:layout_constraintWidth_percent="0.35"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="2dp"/>
+
+    <Button
+        style="@style/MyButtonStyle"
+        android:id="@+id/seekForwardButton"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:text="+1M"
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@id/nextButton"
+        app:layout_constraintStart_toEndOf="@id/seekBackButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.35"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="2dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

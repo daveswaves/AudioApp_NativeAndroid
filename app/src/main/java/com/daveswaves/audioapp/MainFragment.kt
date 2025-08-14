@@ -286,7 +286,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
-    private fun playCurrentChapter() {
+    private fun playCurrentChapter(restorePosition: Boolean = true) {
         if (audioFiles.isEmpty()) {
             updateChapterTitle("Unknown chapter")
             return
@@ -300,10 +300,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 setDataSource(requireContext(), uri)
                 prepare()
                 
-                // Seek to saved position if this is the current chapter for this book
-                val savedPosition = getSavedPositionForCurrentChapter()
-                if (savedPosition > 0) {
-                    seekTo(savedPosition)
+                // Only seek to saved position if restorePosition is true
+                if (restorePosition) {
+                    val savedPosition = getSavedPositionForCurrentChapter()
+                    if (savedPosition > 0) {
+                        seekTo(savedPosition)
+                    }
                 }
 
                 start()
@@ -317,7 +319,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
                     // Auto-advance to next chapter
                     if (currentIndex < audioFiles.size - 1) {
-                        playNextChapter()
+                        currentIndex = (currentIndex + 1) % audioFiles.size
+                        playCurrentChapter(restorePosition = false)
                     }
                 }
             }
@@ -343,7 +346,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         if (audioFiles.isNotEmpty()) {
             saveCurrentPosition() // Save position before switching
             currentIndex = (currentIndex + 1) % audioFiles.size
-            playCurrentChapter()
+            playCurrentChapter(restorePosition = false) // Don't restore position for new chapter
         }
     }
 
@@ -351,7 +354,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         if (audioFiles.isNotEmpty()) {
             saveCurrentPosition() // Save position before switching
             currentIndex = if (currentIndex - 1 < 0) audioFiles.size - 1 else currentIndex - 1
-            playCurrentChapter()
+            playCurrentChapter(restorePosition = false) // Don't restore position for new chapter
         }
     }
 
@@ -367,6 +370,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         return uri.lastPathSegment
             ?.substringAfterLast("/")
             ?.substringBeforeLast(".")
+            ?.replace(Regex("""^\d+\._"""), { matchResult ->
+                matchResult.value.removeSuffix("_")
+            })
             ?: "Unknown chapter"
     }
 

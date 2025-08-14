@@ -98,6 +98,10 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun setupButtonListeners() {
+        chapterTitle.setOnClickListener {
+            navigateToChaptersFragment()
+        }
+        
         playButton.setOnClickListener {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
         }
@@ -358,6 +362,16 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
+    private fun navigateToChaptersFragment() {
+        if (audioFiles.isNotEmpty()) {
+            val chaptersFragment = ChaptersFragment.newInstance(
+                audioFiles.map { getChapterDisplayName(it) },
+                currentIndex
+            )
+            navigateToFragment(chaptersFragment)
+        }
+    }
+
     private fun updateChapterTitle(title: String? = null) {
         chapterTitle.text = title ?: if (audioFiles.isNotEmpty()) {
             getChapterDisplayName(audioFiles[currentIndex])
@@ -486,6 +500,21 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private fun getChapterIndexKey(bookName: String): String {
         return "$KEY_CHAPTER_PREFIX$bookName"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        
+        // Check if user selected a chapter from ChaptersFragment
+        val selectedIndex = prefs.getInt("selected_chapter_index", -1)
+        if (selectedIndex >= 0 && selectedIndex < audioFiles.size && selectedIndex != currentIndex) {
+            saveCurrentPosition() // Save current position before switching
+            currentIndex = selectedIndex
+            playCurrentChapter(restorePosition = false) // Start from beginning of selected chapter
+            
+            // Clear the selection
+            prefs.edit().remove("selected_chapter_index").apply()
+        }
     }
 }
 

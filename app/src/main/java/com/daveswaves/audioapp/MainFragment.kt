@@ -23,6 +23,11 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private var isPlaying = false
     private var audioFiles: List<Uri> = emptyList()
     private var currentIndex = 0
+    private var currentBookName: String? = null
+
+    // Position tracking
+    private var positionUpdateRunnable: Runnable? = null
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
     // UI components
     private lateinit var chapterTitle: TextView
@@ -43,8 +48,11 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         private const val KEY_HAS_SELECTED_FOLDER = "has_selected_folder"
         private const val KEY_AUDIOBOOK_DIR = "audiobook_dir"
         private const val KEY_SELECTED_BOOK = "selected_book"
+        private const val KEY_POSITION_PREFIX = "position_"
+        private const val KEY_CHAPTER_PREFIX = "chapter_"
         
         private val SUPPORTED_AUDIO_FORMATS = setOf("mp3", "m4a")
+        private const val POSITION_UPDATE_INTERVAL = 5000L // Update position every 5 seconds
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -178,10 +186,16 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             return
         }
 
+        // Save current position before loading new book
+        saveCurrentPosition()
+
         runCatching {
             val files = getAudioFilesFromBook(Uri.parse(baseUriString), selectedBook)
             audioFiles = sortAudioFilesNaturally(files)
-            currentIndex = 0
+            currentBookName = selectedBook
+            
+            // Restore saved position and chapter for this book
+            restoreSavedPosition()
             updateChapterTitle()
         }.onFailure {
             updateChapterTitle("Unknown chapter")
@@ -268,6 +282,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             mediaPlayer?.start()
             isPlaying = true
             playButton.text = "Pause"
+            startPositionTracking()
         }
     }
 
@@ -284,10 +299,22 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(requireContext(), uri)
                 prepare()
+                
+                // Seek to saved position if this is the current chapter for this book
+                val savedPosition = getSavedPositionForCurrentChapter()
+                if (savedPosition > 0) {
+                    seekTo(savedPosition)
+                }
+
                 start()
                 setOnCompletionListener {
                     this@MainFragment.isPlaying = false
                     playButton.text = "Play"
+                    stopPositionTracking()
+                    
+                    // Clear saved position for completed chapter
+                    clearSavedPositionForCurrentChapter()
+
                     // Auto-advance to next chapter
                     if (currentIndex < audioFiles.size - 1) {
                         playNextChapter()
@@ -298,6 +325,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             isPlaying = true
             playButton.text = "Pause"
             updateChapterTitle()
+            startPositionTracking()
         }.onFailure {
             updateChapterTitle("Error playing audio")
         }
@@ -307,10 +335,13 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         mediaPlayer?.pause()
         isPlaying = false
         playButton.text = "Play"
+        stopPositionTracking()
+        saveCurrentPosition() // Save position when pausing
     }
 
     private fun playNextChapter() {
         if (audioFiles.isNotEmpty()) {
+            saveCurrentPosition() // Save position before switching
             currentIndex = (currentIndex + 1) % audioFiles.size
             playCurrentChapter()
         }
@@ -318,6 +349,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private fun playPreviousChapter() {
         if (audioFiles.isNotEmpty()) {
+            saveCurrentPosition() // Save position before switching
             currentIndex = if (currentIndex - 1 < 0) audioFiles.size - 1 else currentIndex - 1
             playCurrentChapter()
         }
@@ -352,6 +384,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun releaseMediaPlayer() {
+        stopPositionTracking()
+        saveCurrentPosition() // Save position before releasing
         mediaPlayer?.release()
         mediaPlayer = null
     }
@@ -363,10 +397,89 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     override fun onPause() {
         super.onPause()
+        saveCurrentPosition() // Save position when fragment is paused
         // Optionally pause audio when fragment is not visible
         if (isPlaying) {
             pauseAudio()
         }
+    }
+
+    // Position tracking methods
+    private fun startPositionTracking() {
+        stopPositionTracking() // Stop any existing tracking
+        
+        positionUpdateRunnable = object : Runnable {
+            override fun run() {
+                if (isPlaying && mediaPlayer != null) {
+                    saveCurrentPosition()
+                    handler.postDelayed(this, POSITION_UPDATE_INTERVAL)
+                }
+            }
+        }
+        handler.postDelayed(positionUpdateRunnable!!, POSITION_UPDATE_INTERVAL)
+    }
+
+    private fun stopPositionTracking() {
+        positionUpdateRunnable?.let { runnable ->
+            handler.removeCallbacks(runnable)
+        }
+        positionUpdateRunnable = null
+    }
+
+    private fun saveCurrentPosition() {
+        val bookName = currentBookName ?: return
+        val player = mediaPlayer ?: return
+        
+        if (audioFiles.isNotEmpty() && currentIndex < audioFiles.size) {
+            val position = player.currentPosition
+            val chapterName = getChapterDisplayName(audioFiles[currentIndex])
+            
+            prefs.edit()
+                .putInt(getPositionKey(bookName, chapterName), position)
+                .putInt(getChapterIndexKey(bookName), currentIndex)
+                .apply()
+        }
+    }
+
+    private fun restoreSavedPosition() {
+        val bookName = currentBookName ?: return
+        
+        if (audioFiles.isEmpty()) {
+            currentIndex = 0
+            return
+        }
+        
+        // Restore chapter index
+        val savedChapterIndex = prefs.getInt(getChapterIndexKey(bookName), 0)
+        currentIndex = if (savedChapterIndex < audioFiles.size) savedChapterIndex else 0
+    }
+
+    private fun getSavedPositionForCurrentChapter(): Int {
+        val bookName = currentBookName ?: return 0
+        
+        if (audioFiles.isEmpty() || currentIndex >= audioFiles.size) return 0
+        
+        val chapterName = getChapterDisplayName(audioFiles[currentIndex])
+        return prefs.getInt(getPositionKey(bookName, chapterName), 0)
+    }
+
+    private fun clearSavedPositionForCurrentChapter() {
+        val bookName = currentBookName ?: return
+        
+        if (audioFiles.isNotEmpty() && currentIndex < audioFiles.size) {
+            val chapterName = getChapterDisplayName(audioFiles[currentIndex])
+            prefs.edit()
+                .remove(getPositionKey(bookName, chapterName))
+                .apply()
+        }
+    }
+
+    private fun getPositionKey(bookName: String, chapterName: String): String {
+        return "$KEY_POSITION_PREFIX${bookName}_$chapterName"
+    }
+
+    private fun getChapterIndexKey(bookName: String): String {
+        return "$KEY_CHAPTER_PREFIX$bookName"
     }
 }
 

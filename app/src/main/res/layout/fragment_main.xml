@@ -142,32 +142,108 @@
         android:layout_marginStart="2dp"/>
     
     <!-- Seek backward / forward buttons -->
+    <!-- -1 minute -->
     <Button
         style="@style/MyButtonStyle"
-        android:id="@+id/seekBackButton"
+        android:id="@+id/seekBackButton1min"
         android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:text="-1M"
+        android:layout_height="70dp"
+        android:text="-1m"
         android:textSize="20sp"
         app:layout_constraintTop_toBottomOf="@id/prevButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/seekForwardButton"
-        app:layout_constraintWidth_percent="0.35"
+        app:layout_constraintEnd_toStartOf="@id/seekBackButton5sec"
+        app:layout_constraintWidth_percent="0.18"
         android:layout_marginTop="4dp"
-        android:layout_marginEnd="2dp"/>
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="0dp"/>
 
+    <!-- -5 seconds -->
     <Button
         style="@style/MyButtonStyle"
-        android:id="@+id/seekForwardButton"
+        android:id="@+id/seekBackButton5sec"
         android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:text="+1M"
+        android:layout_height="70dp"
+        android:text="-5s"
         android:textSize="20sp"
-        app:layout_constraintTop_toBottomOf="@id/nextButton"
-        app:layout_constraintStart_toEndOf="@id/seekBackButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.35"
+        app:layout_constraintTop_toBottomOf="@id/prevButton"
+        app:layout_constraintStart_toEndOf="@id/seekBackButton1min"
+        app:layout_constraintEnd_toStartOf="@id/seekForwardButton5sec"
+        app:layout_constraintWidth_percent="0.18"
         android:layout_marginTop="4dp"
-        android:layout_marginStart="2dp"/>
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="0dp"/>
+
+    <!-- +5 seconds -->
+    <Button
+        style="@style/MyButtonStyle"
+        android:id="@+id/seekForwardButton5sec"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:text="+5s"
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@id/prevButton"
+        app:layout_constraintStart_toEndOf="@id/seekBackButton5sec"
+        app:layout_constraintEnd_toStartOf="@id/seekForwardButton1min"
+        app:layout_constraintWidth_percent="0.18"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="0dp"/>
+
+    <!-- +1 minute -->
+    <Button
+        style="@style/MyButtonStyle"
+        android:id="@+id/seekForwardButton1min"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:text="+1m"
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@id/prevButton"
+        app:layout_constraintStart_toEndOf="@id/seekForwardButton5sec"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.18"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="20dp"/>
+
+    <!-- Progress Bar Container -->
+    <FrameLayout
+        android:id="@+id/progressBarContainer"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        app:layout_constraintTop_toBottomOf="@id/seekBackButton1min"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.9"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/progress_bar_background">
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/chapterProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="0"
+            android:progressDrawable="@drawable/progress_bar_drawable"
+            android:layout_margin="2dp"/>
+
+        <!-- Time Display -->
+        <TextView
+            android:id="@+id/timeDisplay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="0:00 / 0:00"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"/>
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

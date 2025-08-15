@@ -34,18 +34,24 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         }
 
         val bookList = arguments?.getStringArrayList(ARG_BOOKS) ?: emptyList()
+        val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+        val baseUriString = prefs.getString("audiobook_dir", null)
+        val baseUri = baseUriString?.let { Uri.parse(it) }
 
         val recyclerView: RecyclerView = view.findViewById(R.id.booksRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         
-        recyclerView.adapter = BooksAdapter(bookList) { selectedBook ->
-            val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
-
-            val baseUri = Uri.parse(prefs.getString("audiobook_dir", null))
-            val coverUri = getCoverUri(baseUri, selectedBook)
+        // Create book data with cover URIs
+        val booksWithCovers = bookList.map { bookName ->
+            val coverUri = baseUri?.let { getCoverUri(it, bookName) }
+            BookData(bookName, coverUri)
+        }
+        
+        recyclerView.adapter = BooksAdapter(booksWithCovers) { selectedBook ->
+            val coverUri = getCoverUri(baseUri!!, selectedBook.name)
 
             prefs.edit()
-                .putString("selected_book", selectedBook)
+                .putString("selected_book", selectedBook.name)
                 .putString("selected_book_cover", coverUri?.toString())
                 .apply()
 
@@ -95,3 +101,5 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         return null
     }
 }
+
+data class BookData(val name: String, val coverUri: Uri?)

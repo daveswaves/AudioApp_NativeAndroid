@@ -6,15 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import android.widget.ImageView
 // import android.widget.Toast
 
 class BooksAdapter(
-    private val books: List<String>,
-    private val onClick: (String) -> Unit = {}
+    private val books: List<BookData>,
+    private val onClick: (BookData) -> Unit = {}
 ) : RecyclerView.Adapter<BooksAdapter.BookViewHolder>() {
 
     inner class BookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val bookTitle: TextView = itemView.findViewById(android.R.id.text1)
+        val bookTitle: TextView = itemView.findViewById(R.id.bookTitle)
+        val bookCover: ImageView = itemView.findViewById(R.id.bookCover)
 
         init {
             itemView.setOnClickListener {
@@ -29,16 +31,24 @@ class BooksAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(android.R.layout.simple_list_item_1, parent, false)
+            .inflate(R.layout.item_book, parent, false)
         return BookViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
-        val bookName = books[position]
-        holder.bookTitle.text = bookName
+        val bookData = books[position]
+        holder.bookTitle.text = bookData.name
+        
+        // Load cover image or use default
+        if (bookData.coverUri != null) {
+            holder.bookCover.setImageURI(bookData.coverUri)
+        } else {
+            holder.bookCover.setImageResource(R.drawable.books)
+        }
+        
         holder.itemView.setOnClickListener {
             // Toast.makeText(holder.itemView.context, "Clicked $bookName", Toast.LENGTH_SHORT).show()
-            onClick(bookName)
+            onClick(bookData)
         }
     }
 

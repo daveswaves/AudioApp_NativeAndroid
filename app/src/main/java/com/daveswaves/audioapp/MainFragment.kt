@@ -30,6 +30,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     // Position tracking
     private var positionUpdateRunnable: Runnable? = null
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var saveCounter = 0 // Avoid using too much battery
 
     // UI components
     private lateinit var chapterTitle: TextView
@@ -56,7 +57,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         private const val KEY_CHAPTER_PREFIX = "chapter_"
         
         private val SUPPORTED_AUDIO_FORMATS = setOf("mp3", "m4a")
-        // private const val POSITION_UPDATE_INTERVAL = 5000L // Update position every 5 seconds
         private const val POSITION_UPDATE_INTERVAL = 1000L // Update position every second
     }
 
@@ -84,15 +84,16 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         chapterTitle = view.findViewById(R.id.chapterTitle)
         playButton = view.findViewById(R.id.playButton)
         mainImage = view.findViewById(R.id.myImageView)
-
-        // Add these new view initializations
         chapterProgressBar = view.findViewById(R.id.chapterProgressBar)
         timeDisplay = view.findViewById(R.id.timeDisplay)
+
+        setupProgressBarClickListener()
     }
 
     private fun setupInitialState() {
         updateMainImage()
-        playButton.text = getString(android.R.string.ok).takeIf { false } ?: "Play" // Fallback to "Play"
+        playButton.text = "Play"
+        resetProgressBar()
     }
 
     private fun updateMainImage() {
@@ -128,11 +129,11 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
 
         view?.findViewById<Button>(R.id.seekBackButton5sec)?.setOnClickListener {
-            seekBackward(10000)
+            seekBackward(5000)
         }
 
         view?.findViewById<Button>(R.id.seekForwardButton5sec)?.setOnClickListener {
-            seekForward(10000)
+            seekForward(5000)
         }
 
         view?.findViewById<Button>(R.id.seekForwardButton1min)?.setOnClickListener {
@@ -154,9 +155,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         view?.findViewById<Button>(R.id.bookmarksButton)?.setOnClickListener {
             navigateToFragment(BookmarksFragment())
         }
-
-        // TODO: Implement star action
-        // view?.findViewById<Button>(R.id.starButton)?.setOnClickListener { }
     }
 
     private fun handleFolderSelection(uri: Uri) {
@@ -227,7 +225,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             // Restore saved position and chapter for this book
             restoreSavedPosition()
             updateChapterTitle()
-            resetProgressBar()
+            
+            // Load duration and position for current chapter without starting playback
+            loadCurrentChapterInfo()
         }.onFailure {
             updateChapterTitle("Unknown chapter")
             resetProgressBar()
@@ -325,8 +325,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
 
         releaseMediaPlayer()
-
-        resetProgressBar()
         
         runCatching {
             val uri = audioFiles[currentIndex]
@@ -334,34 +332,20 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 setDataSource(requireContext(), uri)
                 prepare()
 
-                // Initialize progress bar immediately after prepare
-                updateProgressBar()
+                val savedPosition = if (restorePosition) getSavedPositionForCurrentChapter() else 0
                 
-                // Only seek to saved position if restorePosition is true
-                if (restorePosition) {
-                    val savedPosition = getSavedPositionForCurrentChapter()
-                    if (savedPosition > 0) {
-                        seekTo(savedPosition)
-                        updateProgressBar()
-                    }
+                // Initialize progress UI with duration and current position
+                initializeProgressUI(duration, savedPosition)
+                
+                // Seek to saved position if needed
+                if (savedPosition > 0) {
+                    seekTo(savedPosition)
                 }
 
                 start()
+                
                 setOnCompletionListener {
-                    this@MainFragment.isPlaying = false
-                    playButton.text = "Play"
-                    stopPositionTracking()
-
-                    chapterProgressBar.progress = 100
-                    
-                    // Clear saved position for completed chapter
-                    clearSavedPositionForCurrentChapter()
-
-                    // Auto-advance to next chapter
-                    if (currentIndex < audioFiles.size - 1) {
-                        currentIndex = (currentIndex + 1) % audioFiles.size
-                        playCurrentChapter(restorePosition = false)
-                    }
+                    handleChapterCompletion()
                 }
             }
             
@@ -369,10 +353,24 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             playButton.text = "Pause"
             updateChapterTitle()
             startPositionTracking()
+            
         }.onFailure {
             updateChapterTitle("Error playing audio")
-            chapterProgressBar.progress = 0
-            timeDisplay.text = "0:00 / 0:00"
+            resetProgressBar()
+        }
+    }
+
+    private fun handleChapterCompletion() {
+        isPlaying = false
+        playButton.text = "Play"
+        stopPositionTracking()
+        chapterProgressBar.progress = 100
+        clearSavedPositionForCurrentChapter()
+
+        // Auto-advance to next chapter
+        if (currentIndex < audioFiles.size - 1) {
+            currentIndex = (currentIndex + 1) % audioFiles.size
+            playCurrentChapter(restorePosition = false)
         }
     }
 
@@ -381,25 +379,22 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         isPlaying = false
         playButton.text = "Play"
         stopPositionTracking()
-        saveCurrentPosition() // Save position when pausing
-        updateProgressBar()
+        saveCurrentPosition()
     }
 
     private fun playNextChapter() {
         if (audioFiles.isNotEmpty()) {
-            saveCurrentPosition() // Save position before switching
+            saveCurrentPosition()
             currentIndex = (currentIndex + 1) % audioFiles.size
-            resetProgressBar()
-            playCurrentChapter(restorePosition = false) // Don't restore position for new chapter
+            playCurrentChapter(restorePosition = false)
         }
     }
 
     private fun playPreviousChapter() {
         if (audioFiles.isNotEmpty()) {
-            saveCurrentPosition() // Save position before switching
+            saveCurrentPosition()
             currentIndex = if (currentIndex - 1 < 0) audioFiles.size - 1 else currentIndex - 1
-            resetProgressBar()
-            playCurrentChapter(restorePosition = false) // Don't restore position for new chapter
+            playCurrentChapter(restorePosition = false)
         }
     }
 
@@ -410,7 +405,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         val newPosition = (currentPosition - mSecs).coerceAtLeast(0)
         
         player.seekTo(newPosition)
-        saveCurrentPosition() // Update saved position immediately
+        saveCurrentPosition()
         updateProgressBar()
     }
 
@@ -422,22 +417,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         val newPosition = (currentPosition + mSecs).coerceAtMost(duration)
         
         player.seekTo(newPosition)
-        saveCurrentPosition() // Update saved position immediately
+        saveCurrentPosition()
         updateProgressBar()
         
         // If we've reached the end, complete the chapter
         if (newPosition >= duration - 1000) { // 1 second buffer
-            player.pause()
-            isPlaying = false
-            playButton.text = "Play"
-            stopPositionTracking()
-            clearSavedPositionForCurrentChapter()
-            
-            // Auto-advance to next chapter
-            if (currentIndex < audioFiles.size - 1) {
-                currentIndex = (currentIndex + 1) % audioFiles.size
-                playCurrentChapter(restorePosition = false)
-            }
+            handleChapterCompletion()
         }
     }
 
@@ -484,7 +469,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private fun releaseMediaPlayer() {
         stopPositionTracking()
-        saveCurrentPosition() // Save position before releasing
+        saveCurrentPosition()
         mediaPlayer?.release()
         mediaPlayer = null
     }
@@ -494,15 +479,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         releaseMediaPlayer()
     }
 
-    override fun onPause() {
-        super.onPause()
-        saveCurrentPosition() // Save position when fragment is paused
-        // Optionally pause audio when fragment is not visible
-        if (isPlaying) {
-            pauseAudio()
-        }
-    }
-
     // Position tracking methods
     private fun startPositionTracking() {
         stopPositionTracking() // Stop any existing tracking
@@ -510,13 +486,20 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         positionUpdateRunnable = object : Runnable {
             override fun run() {
                 if (isPlaying && mediaPlayer != null) {
-                    saveCurrentPosition()
                     updateProgressBar()
-                    handler.postDelayed(this, POSITION_UPDATE_INTERVAL) // Use 1000L if require update every second
+
+                    // Avoid using too much battery (update position every 30 seconds)
+                    saveCounter++
+                    if (saveCounter >= 30) {
+                        saveCurrentPosition()
+                        saveCounter = 0
+                    }
+                    // saveCurrentPosition()
+                    handler.postDelayed(this, POSITION_UPDATE_INTERVAL)
                 }
             }
         }
-        handler.postDelayed(positionUpdateRunnable!!, POSITION_UPDATE_INTERVAL) // 1000L
+        handler.postDelayed(positionUpdateRunnable!!, POSITION_UPDATE_INTERVAL)
     }
 
     private fun stopPositionTracking() {
@@ -584,7 +567,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         return "$KEY_CHAPTER_PREFIX$bookName"
     }
 
-    // update the progress bar
+    // Progress bar and time display methods
     private fun updateProgressBar() {
         val player = mediaPlayer ?: return
         
@@ -600,17 +583,13 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 val totalTime = formatTime(duration)
                 timeDisplay.text = "$currentTime / $totalTime"
             } else {
-                chapterProgressBar.progress = 0
-                timeDisplay.text = "0:00 / 0:00"
+                resetProgressBar()
             }
         } catch (e: Exception) {
-            // Handle any exceptions (e.g., if MediaPlayer is not prepared)
-            chapterProgressBar.progress = 0
-            timeDisplay.text = "0:00 / 0:00"
+            resetProgressBar()
         }
     }
 
-    // format time in mm:ss format
     private fun formatTime(milliseconds: Int): String {
         val seconds = milliseconds / 1000
         val minutes = seconds / 60
@@ -618,10 +597,103 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         return String.format("%d:%02d", minutes, remainingSeconds)
     }
 
-    // reset progress bar when no media is loaded
     private fun resetProgressBar() {
         chapterProgressBar.progress = 0
         timeDisplay.text = "0:00 / 0:00"
+    }
+
+    // Initialize progress bar with duration and optional current position
+    private fun initializeProgressUI(duration: Int, currentPosition: Int = 0) {
+        val progress = if (duration > 0 && currentPosition > 0) {
+            ((currentPosition.toFloat() / duration.toFloat()) * 100).roundToInt()
+        } else {
+            0
+        }
+        
+        chapterProgressBar.progress = progress
+        
+        val currentTime = formatTime(currentPosition)
+        val totalTime = formatTime(duration)
+        timeDisplay.text = "$currentTime / $totalTime"
+    }
+
+    // Load current chapter info to display duration and saved position without starting playback
+    private fun loadCurrentChapterInfo() {
+        if (audioFiles.isEmpty()) {
+            resetProgressBar()
+            return
+        }
+
+        runCatching {
+            val uri = audioFiles[currentIndex]
+            val tempPlayer = MediaPlayer().apply {
+                setDataSource(requireContext(), uri)
+                prepare()
+            }
+            
+            val duration = tempPlayer.duration
+            val savedPosition = getSavedPositionForCurrentChapter()
+            
+            initializeProgressUI(duration, savedPosition)
+            
+            tempPlayer.release()
+        }.onFailure {
+            resetProgressBar()
+        }
+    }
+
+    private fun setupProgressBarClickListener() {
+        chapterProgressBar.setOnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                val progressBarWidth = chapterProgressBar.width
+                val touchX = event.x
+                val percentage = (touchX / progressBarWidth).coerceIn(0f, 1f)
+
+                // CASE 1: No MediaPlayer yet (user hasn’t started playback)
+                if (mediaPlayer == null) {
+                    if (audioFiles.isNotEmpty() && currentBookName != null) {
+                        // Estimate duration from last loaded info
+                        val tempPlayer = MediaPlayer().apply {
+                            setDataSource(requireContext(), audioFiles[currentIndex])
+                            prepare()
+                        }
+                        val duration = tempPlayer.duration
+                        tempPlayer.release()
+
+                        val newPosition = (duration * percentage).toInt()
+
+                        // Save position so playback starts here later
+                        val chapterName = getChapterDisplayName(audioFiles[currentIndex])
+                        prefs.edit()
+                            .putInt(getPositionKey(currentBookName!!, chapterName), newPosition)
+                            .apply()
+
+                        // Update UI immediately
+                        initializeProgressUI(duration, newPosition)
+                    }
+                    return@setOnTouchListener true
+                }
+
+                // CASE 2: MediaPlayer already exists (normal seek)
+                val player = mediaPlayer ?: return@setOnTouchListener false
+                val duration = player.duration
+                val newPosition = (duration * percentage).toInt()
+
+                player.seekTo(newPosition)
+                saveCurrentPosition()
+                updateProgressBar()
+
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopPositionTracking() // Stop UI updates when not visible
+        saveCurrentPosition()  // Still save current position
     }
 
     override fun onResume() {
@@ -630,69 +702,18 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         // Check if user selected a chapter from ChaptersFragment
         val selectedIndex = prefs.getInt("selected_chapter_index", -1)
         if (selectedIndex >= 0 && selectedIndex < audioFiles.size && selectedIndex != currentIndex) {
-            saveCurrentPosition() // Save current position before switching
+            saveCurrentPosition()
             currentIndex = selectedIndex
-            resetProgressBar()
-            playCurrentChapter(restorePosition = false) // Start from beginning of selected chapter
+            playCurrentChapter(restorePosition = false)
             
             // Clear the selection
             prefs.edit().remove("selected_chapter_index").apply()
         }
+
+        // Resume progress tracking if playback is active
+        if (isPlaying) {
+            startPositionTracking()
+            // updateProgressBar() // immediate refresh so UI is up to date
+        }
     }
 }
-
-/*
-Claude AI MainFragment.kt Refactor
-----------------------------------
-1. Code Organization & Structure
-
-▸ Companion object for constants instead of magic strings
-▸ Lazy initialization for SharedPreferences
-▸ Proper separation of initialization, setup, and business logic
-▸ Clear method grouping by functionality
-
-2. Error Handling
-
-▸ runCatching blocks around file system operations that can fail
-▸ Graceful fallbacks when audio files can't be loaded
-▸ Null safety improvements throughout
-
-3. Performance Optimizations
-
-▸ Eliminated code duplication in audio file loading
-▸ Extracted helper methods for reusable operations
-▸ More efficient file filtering with a dedicated isAudioFile() method
-▸ Lazy SharedPreferences initialization
-
-4. Better Resource Management
-
-▸ Consolidated MediaPlayer release logic
-▸ Added onPause() to optionally pause audio when fragment isn't visible
-▸ Proper cleanup in lifecycle methods
-
-5. Improved Maintainability
-
-▸ Single responsibility for each method
-▸ Descriptive method names that clearly indicate their purpose
-▸ Consistent naming patterns
-▸ Reduced nesting levels for better readability
-
-6. Enhanced User Experience
-
-▸ Auto-advance to next chapter when current chapter completes
-▸ Better error messages for different failure scenarios
-▸ More robust file type detection
-
-7. Code Quality Improvements
-
-▸ Eliminated magic strings with constants
-▸ Consistent code formatting
-▸ Proper Kotlin idioms (e.g., ?.let, runCatching)
-▸ Reduced complexity in individual methods
-
-8. Type Safety
-
-▸ Better null handling throughout
-▸ Safe string operations with proper fallbacks
-▸ Consistent Uri handling
-*/

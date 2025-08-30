@@ -152,6 +152,10 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             navigateToFragment(RecentFragment())
         }
 
+        view?.findViewById<Button>(R.id.starButton)?.setOnClickListener {
+            navigateToFragment(StarFragment())
+        }
+
         view?.findViewById<Button>(R.id.bookmarksButton)?.setOnClickListener {
             navigateToFragment(BookmarksFragment())
         }
@@ -353,6 +357,26 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             playButton.text = "Pause"
             updateChapterTitle()
             startPositionTracking()
+
+            // Save to recent books
+            val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+            val currentBook = prefs.getString("selected_book", null)
+            val currentCover = prefs.getString("selected_book_cover", null)
+
+            currentBook?.let { bookName ->
+                val recentSet = prefs.getStringSet("recent_books", mutableSetOf())!!.toMutableSet()
+                recentSet.add(bookName) // ensure uniqueness
+                prefs.edit()
+                    .putStringSet("recent_books", recentSet)
+                    .apply()
+
+                // (optional) save cover per book in its own key
+                currentCover?.let { cover ->
+                    prefs.edit()
+                        .putString("recent_cover_$bookName", cover)
+                        .apply()
+                }
+            }
             
         }.onFailure {
             updateChapterTitle("Error playing audio")

@@ -1,7 +1,6 @@
 TO-DO
 
-- Display name of current chapter on main view.
-- Add chapters view (displayed when when name of current chapter pressed).
+- 
 
 
 # # # # # # # # # # # # # # # # # # # # #
@@ -11,13 +10,16 @@ AudioApp/app/src/main/java/com/daveswaves/audioapp/BooksAdapter.kt
 AudioApp/app/src/main/java/com/daveswaves/audioapp/BooksFragment.kt
 AudioApp/app/src/main/java/com/daveswaves/audioapp/ChaptersFragment.kt
 AudioApp/app/src/main/java/com/daveswaves/audioapp/MainActivity.kt
+AudioApp/app/src/main/java/com/daveswaves/audioapp/MainFragment.7z
 AudioApp/app/src/main/java/com/daveswaves/audioapp/MainFragment.kt
+AudioApp/app/src/main/java/com/daveswaves/audioapp/RecentAdapter.kt
 AudioApp/app/src/main/java/com/daveswaves/audioapp/RecentFragment.kt
 
 AudioApp/app/src/main/res/drawable/books.png
+AudioApp/app/src/main/res/drawable/refresh.png
+
 AudioApp/app/src/main/res/drawable/progress_bar_background.xml
 AudioApp/app/src/main/res/drawable/progress_bar_drawable.xml
-AudioApp/app/src/main/res/drawable/refresh.png
 
 AudioApp/app/src/main/res/layout/activity_main.xml
 AudioApp/app/src/main/res/layout/fragment_bookmarks.xml
@@ -25,6 +27,7 @@ AudioApp/app/src/main/res/layout/fragment_books.xml
 AudioApp/app/src/main/res/layout/fragment_chapters.xml
 AudioApp/app/src/main/res/layout/fragment_main.xml
 AudioApp/app/src/main/res/layout/fragment_recent.xml
+AudioApp/app/src/main/res/layout/item_book.xml
 
 AudioApp/app/src/main/res/mipmap-hdpi/ic_launcher.png
 AudioApp/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
@@ -42,6 +45,8 @@ AudioApp/app/src/main/res/values/styles.xml
 AudioApp/app/src/main/AndroidManifest.xml
 
 AudioApp/app/build.gradle.kts
+
 AudioApp/build.gradle.kts
 AudioApp/gradle.properties
 AudioApp/settings.gradle.kts
+

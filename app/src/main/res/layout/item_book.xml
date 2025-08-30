@@ -23,5 +23,15 @@
         android:layout_gravity="center_vertical"
         android:textSize="16sp"
         android:textColor="@android:color/white" />
+    
+    <!-- Remove button -->
+    <Button
+        android:id="@+id/removeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="X"
+        android:textSize="34sp"
+        android:background="?android:attr/selectableItemBackground"
+        android:textColor="@android:color/holo_red_light"/>
 
 </LinearLayout>

@@ -111,6 +111,16 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         chapterTitle.setOnClickListener {
             navigateToChaptersFragment()
         }
+
+        // Reset chapter to start
+        chapterTitle.setOnLongClickListener {
+            mediaPlayer?.let {
+                it.seekTo(0) // reset to beginning
+                saveCurrentPosition()
+                resetProgressBar()
+            }
+            true
+        }
         
         playButton.setOnClickListener {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
@@ -153,7 +163,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
 
         view?.findViewById<Button>(R.id.starButton)?.setOnClickListener {
-            navigateToFragment(StarFragment())
+            // navigateToFragment(StarFragment())
         }
 
         view?.findViewById<Button>(R.id.bookmarksButton)?.setOnClickListener {

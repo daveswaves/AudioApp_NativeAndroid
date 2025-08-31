@@ -29,8 +29,8 @@
         android:id="@+id/removeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="X"
-        android:textSize="34sp"
+        android:text="❌"
+        android:textSize="28sp"
         android:background="?android:attr/selectableItemBackground"
         android:textColor="@android:color/holo_red_light"/>
 

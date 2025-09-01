@@ -31,8 +31,6 @@ class BookmarksFragment : Fragment(R.layout.fragment_bookmarks) {
             emptyList()
         }
 
-
-
         // Parse bookmarks and sort by timestamp (newest first)
         val bookmarks = filteredSet.mapNotNull { bookmarkString ->
             val parts = bookmarkString.split("|")

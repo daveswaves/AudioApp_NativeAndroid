@@ -244,6 +244,19 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         navigateToFragment(BooksFragment.newInstance(books))
     }
 
+    private fun updateBookmarksButtonState() {
+        val bookmarksButton = view?.findViewById<Button>(R.id.bookmarksButton) ?: return
+        val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+        val allBookmarks = prefs.getStringSet("all_bookmarks", emptySet()) ?: emptySet()
+        val currentBook = prefs.getString("selected_book", null)
+
+        val hasBookmarks = currentBook != null && allBookmarks.any { it.startsWith("$currentBook|") }
+
+        bookmarksButton.isEnabled = hasBookmarks
+        bookmarksButton.alpha = if (hasBookmarks) 1.0f else 0.5f // grayed-out effect
+    }
+
+
     private fun getAudioBooksFromFolder(folderUri: Uri): List<String> {
         val books = mutableListOf<String>()
         
@@ -284,6 +297,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             
             updateMainImage()
             loadAudioFiles()
+            updateBookmarksButtonState()
             
             // Wait for files to load then seek
             handler.postDelayed({
@@ -355,6 +369,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             updateChapterTitle()
             
             loadCurrentChapterInfo()
+            updateBookmarksButtonState()
         }.onFailure {
             updateChapterTitle("Unknown chapter")
             resetProgressBar()

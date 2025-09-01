@@ -1,6 +1,7 @@
 // MainFragment.kt
 package com.daveswaves.audioapp
 
+import java.io.File
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -16,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import android.widget.ProgressBar
+import android.widget.Toast
 import kotlin.math.roundToInt
 
 class MainFragment : Fragment(R.layout.fragment_main) {
@@ -71,6 +73,27 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         initializeViews(view)
         setupInitialState()
         setupButtonListeners()
+
+        // Handle bookmark navigation
+        arguments?.let { bundle ->
+            val bookmarkBook = bundle.getString("bookmark_book")
+            val bookmarkChapter = bundle.getString("bookmark_chapter") 
+            val bookmarkChapterIndex = bundle.getInt("bookmark_chapter_index", -1)
+            val bookmarkPosition = bundle.getInt("bookmark_position", -1)
+            
+            if (bookmarkBook != null && bookmarkChapterIndex >= 0 && bookmarkPosition >= 0) {
+                // Clear the arguments to avoid re-triggering
+                arguments = null
+                
+                // Toast.makeText(requireContext(), "Loading bookmark: $bookmarkBook", Toast.LENGTH_SHORT).show()
+                
+                // Handle the bookmark seek after everything loads
+                handler.postDelayed({
+                    seekToBookmark(bookmarkBook, bookmarkChapter ?: "", bookmarkChapterIndex, bookmarkPosition)
+                }, 1000) // Give it time to fully initialize
+            }
+        }
+
         loadAudioFiles()
     }
 
@@ -163,7 +186,40 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
 
         view?.findViewById<Button>(R.id.starButton)?.setOnClickListener {
-            // navigateToFragment(StarFragment())
+            val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+            val currentBook = prefs.getString("selected_book", null)
+            val currentPosition = mediaPlayer?.currentPosition ?: 0
+
+            if (currentBook != null && audioFiles.isNotEmpty()) {
+                val chapterName = getChapterDisplayName(audioFiles[currentIndex])
+                
+                // Create bookmark string with book, chapter, and position info
+                val bookmarkString = "${currentBook}|${chapterName}|${currentIndex}|${currentPosition}|${System.currentTimeMillis()}"
+                
+                // Save to global bookmarks (not per-book)
+                val existing = prefs.getStringSet("all_bookmarks", emptySet()) ?: emptySet()
+                val updated = HashSet(existing)
+                updated.add(bookmarkString)
+                
+                prefs.edit().putStringSet("all_bookmarks", updated).apply()
+
+                // Format time for display
+                val totalSeconds = currentPosition / 1000
+                val minutes = totalSeconds / 60
+                val seconds = totalSeconds % 60
+                val formatted = String.format("%02d:%02d", minutes, seconds)
+                
+                // Toast.makeText(requireContext(), "Bookmark added: $chapterName at $formatted", Toast.LENGTH_SHORT).show()
+                
+            } else {
+                val reason = when {
+                    currentBook == null -> "No audiobook selected"
+                    audioFiles.isEmpty() -> "No audio files loaded"
+                    currentPosition <= 0 -> "Audio not playing or at position 0"
+                    else -> "Unknown error"
+                }
+                Toast.makeText(requireContext(), reason, Toast.LENGTH_SHORT).show()
+            }
         }
 
         view?.findViewById<Button>(R.id.bookmarksButton)?.setOnClickListener {
@@ -217,6 +273,107 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         
         return books
     }
+
+    fun seekToBookmark(bookName: String, chapterName: String, chapterIndex: Int, position: Int) {
+        val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+        val currentBook = prefs.getString("selected_book", null)
+        
+        saveCurrentPosition()
+        
+        if (currentBook != bookName) {
+            prefs.edit().putString("selected_book", bookName).apply()
+
+            // Clear the cover so it shows default book icon
+            // prefs.edit().remove(KEY_SELECTED_BOOK_COVER).apply()
+
+            // Look for cover.jpg in the audiobook’s folder
+            val coverUri = getCoverUriForBook(bookName)
+            if (coverUri != null) {
+                prefs.edit().putString(KEY_SELECTED_BOOK_COVER, coverUri.toString()).apply()
+            } else {
+                prefs.edit().remove(KEY_SELECTED_BOOK_COVER).apply() // fallback to default
+            }
+            
+            updateMainImage()
+            loadAudioFiles()
+            
+            // Wait for files to load then seek
+            handler.postDelayed({
+                // Toast.makeText(requireContext(), "Debug: Loaded ${audioFiles.size} files", Toast.LENGTH_SHORT).show()
+                performSeek(chapterIndex, position)
+            }, 100) // Longer delay
+        } else {
+            // Same book, just seek
+            // Toast.makeText(requireContext(), "Debug: Same book, seeking directly", Toast.LENGTH_SHORT).show()
+            performSeek(chapterIndex, position)
+        }
+    }
+
+    private fun getCoverUriForBook(bookName: String): Uri? {
+        val baseDir = File(requireContext().filesDir, "audiobooks/$bookName")
+        val coverFile = File(baseDir, "cover.jpg")
+        return if (coverFile.exists()) Uri.fromFile(coverFile) else null
+    }
+
+
+    private fun performSeek(chapterIndex: Int, position: Int) {
+        // if (audioFiles.isEmpty()) {
+        //     Toast.makeText(requireContext(), "Debug: No audio files available", Toast.LENGTH_SHORT).show()
+        //     return
+        // }
+        
+        // if (chapterIndex >= audioFiles.size || chapterIndex < 0) {
+        //     Toast.makeText(requireContext(), "Debug: Invalid chapter index $chapterIndex (max ${audioFiles.size-1})", Toast.LENGTH_SHORT).show()
+        //     return
+        // }
+        
+        // Stop current playback
+        releaseMediaPlayer()
+        
+        // Set new chapter
+        currentIndex = chapterIndex
+        updateChapterTitle()
+        
+        // Create MediaPlayer but DON'T start playing yet
+        val uri = audioFiles[currentIndex]
+        mediaPlayer = MediaPlayer().apply {
+            try {
+                setDataSource(requireContext(), uri)
+                
+                setOnPreparedListener { player ->
+                    // Now seek to position BEFORE starting
+                    val seekPos = position.coerceAtMost(player.duration - 1000)
+                    player.seekTo(seekPos)
+                    
+                    // Update UI with correct position
+                    initializeProgressUI(player.duration, seekPos)
+                    
+                    // NOW start playing
+                    player.start()
+                    this@MainFragment.isPlaying = true
+                    playButton.text = "Pause"
+                    startPositionTracking()
+                    
+                    // val mins = (seekPos / 1000) / 60
+                    // val secs = (seekPos / 1000) % 60
+                    // Toast.makeText(requireContext(), "Playing from ${String.format("%02d:%02d", mins, secs)}", Toast.LENGTH_SHORT).show()
+                }
+                
+                setOnCompletionListener {
+                    handleChapterCompletion()
+                }
+                
+                // Prepare but don't start yet
+                prepareAsync()
+                
+            } catch (e: Exception) {
+                // Toast.makeText(requireContext(), "Error loading chapter", Toast.LENGTH_SHORT).show()
+                updateChapterTitle("Error loading chapter")
+                resetProgressBar()
+            }
+        }
+    }
+    // this@MainFragment.isPlaying = true
 
     private fun loadAudioFiles() {
         val baseUriString = prefs.getString(KEY_AUDIOBOOK_DIR, null)

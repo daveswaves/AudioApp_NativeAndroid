@@ -17,11 +17,22 @@
 
     <!-- Placeholder for content -->
     <TextView
+        android:id="@+id/titleBookmarks"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Bookmarks"
         android:textSize="20sp"
         app:layout_constraintTop_toBottomOf="@id/closeButton"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/bookmarksRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/titleBookmarks"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="10dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

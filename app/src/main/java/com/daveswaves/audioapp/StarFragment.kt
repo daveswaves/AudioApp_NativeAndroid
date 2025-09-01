@@ -1,4 +1,4 @@
-// BookmarksFragment.kt
+// StarFragment.kt
 package com.daveswaves.audioapp
 
 import android.content.Context
@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class BookmarksFragment : Fragment(R.layout.fragment_bookmarks) {
+class StarFragment : Fragment(R.layout.fragment_bookmarks) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

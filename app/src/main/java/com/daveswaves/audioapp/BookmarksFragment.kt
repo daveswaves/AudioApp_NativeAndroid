@@ -23,8 +23,18 @@ class BookmarksFragment : Fragment(R.layout.fragment_bookmarks) {
         val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
         val bookmarkSet = prefs.getStringSet("all_bookmarks", emptySet()) ?: emptySet()
 
+        val currentBook = prefs.getString("selected_book", null)
+
+        val filteredSet = if (currentBook != null) {
+            bookmarkSet.filter { it.startsWith("$currentBook|") }
+        } else {
+            emptyList()
+        }
+
+
+
         // Parse bookmarks and sort by timestamp (newest first)
-        val bookmarks = bookmarkSet.mapNotNull { bookmarkString ->
+        val bookmarks = filteredSet.mapNotNull { bookmarkString ->
             val parts = bookmarkString.split("|")
             if (parts.size == 5) {
                 try {

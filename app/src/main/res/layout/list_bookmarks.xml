@@ -1,0 +1,29 @@
+<!-- list_bookmarks.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/bookmarkText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:text="00:00"
+        android:textSize="16sp"
+        android:textColor="@android:color/white" />
+    
+    <!-- Remove button -->
+    <Button
+        android:id="@+id/removeBookmarksBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:text="❌"
+        android:textSize="28sp"
+        android:background="?android:attr/selectableItemBackground"
+        android:textColor="@android:color/holo_red_light"/>
+</LinearLayout>

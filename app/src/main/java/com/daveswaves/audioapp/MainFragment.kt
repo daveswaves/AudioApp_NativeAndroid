@@ -32,7 +32,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     // Position tracking
     private var positionUpdateRunnable: Runnable? = null
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var saveCounter = 0 // Avoid using too much battery
 
     // UI components
     private lateinit var chapterTitle: TextView
@@ -57,6 +56,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         private const val KEY_SELECTED_BOOK = "selected_book"
         private const val KEY_POSITION_PREFIX = "position_"
         private const val KEY_CHAPTER_PREFIX = "chapter_"
+        private const val KEY_ALL_BOOKMARKS = "all_bookmarks"
         
         private val SUPPORTED_AUDIO_FORMATS = setOf("mp3", "m4a")
         private const val POSITION_UPDATE_INTERVAL = 1000L // Update position every second
@@ -130,85 +130,51 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
-    private fun setupButtonListeners() {
-        chapterTitle.setOnClickListener {
-            navigateToChaptersFragment()
-        }
+        private fun setButtonClick(id: Int, action: () -> Unit) {
+        view?.findViewById<Button>(id)?.setOnClickListener { action() }
+    }
 
-        // Reset chapter to start
+    private fun setupButtonListeners() {
+        chapterTitle.setOnClickListener { navigateToChaptersFragment() }
+
         chapterTitle.setOnLongClickListener {
-            mediaPlayer?.let {
-                it.seekTo(0) // reset to beginning
-                saveCurrentPosition()
-                resetProgressBar()
-            }
+            mediaPlayer?.seekTo(0)
+            saveCurrentPosition()
+            resetProgressBar()
             true
         }
-        
+
         playButton.setOnClickListener {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
         }
 
-        view?.findViewById<Button>(R.id.nextButton)?.setOnClickListener {
-            playNextChapter()
-        }
+        setButtonClick(R.id.nextButton) { playNextChapter() }
+        setButtonClick(R.id.prevButton) { playPreviousChapter() }
+        setButtonClick(R.id.seekBackButton1min) { seekBackward(60000) }
+        setButtonClick(R.id.seekBackButton5sec) { seekBackward(5000) }
+        setButtonClick(R.id.seekForwardButton5sec) { seekForward(5000) }
+        setButtonClick(R.id.seekForwardButton1min) { seekForward(60000) }
+        setButtonClick(R.id.booksButton) { navigateToBooksFragment() }
+        setButtonClick(R.id.refreshButton) { pickFolderLauncher.launch(null) }
+        setButtonClick(R.id.recentButton) { navigateToFragment(RecentFragment()) }
+        setButtonClick(R.id.bookmarksButton) { navigateToFragment(BookmarksFragment()) }
 
-        view?.findViewById<Button>(R.id.prevButton)?.setOnClickListener {
-            playPreviousChapter()
-        }
-
-        view?.findViewById<Button>(R.id.seekBackButton1min)?.setOnClickListener {
-            seekBackward(60000)
-        }
-
-        view?.findViewById<Button>(R.id.seekBackButton5sec)?.setOnClickListener {
-            seekBackward(5000)
-        }
-
-        view?.findViewById<Button>(R.id.seekForwardButton5sec)?.setOnClickListener {
-            seekForward(5000)
-        }
-
-        view?.findViewById<Button>(R.id.seekForwardButton1min)?.setOnClickListener {
-            seekForward(60000)
-        }
-
-        view?.findViewById<Button>(R.id.booksButton)?.setOnClickListener {
-            navigateToBooksFragment()
-        }
-
-        view?.findViewById<Button>(R.id.refreshButton)?.setOnClickListener {
-            pickFolderLauncher.launch(null)
-        }
-
-        view?.findViewById<Button>(R.id.recentButton)?.setOnClickListener {
-            navigateToFragment(RecentFragment())
-        }
-
-        view?.findViewById<Button>(R.id.starButton)?.setOnClickListener {
-            val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
-            val currentBook = prefs.getString("selected_book", null)
+        setButtonClick(R.id.starButton) {
+            val currentBook = prefs.getString(KEY_SELECTED_BOOK, null)
             val currentPosition = mediaPlayer?.currentPosition ?: 0
 
             if (currentBook != null && audioFiles.isNotEmpty()) {
                 val chapterName = getChapterDisplayName(audioFiles[currentIndex])
-                
-                // Create bookmark string with book, chapter, and position info
-                val bookmarkString = "${currentBook}|${chapterName}|${currentIndex}|${currentPosition}|${System.currentTimeMillis()}"
-                
-                // Save to global bookmarks (not per-book)
-                val existing = prefs.getStringSet("all_bookmarks", emptySet()) ?: emptySet()
-                val updated = HashSet(existing)
-                updated.add(bookmarkString)
-                
-                prefs.edit().putStringSet("all_bookmarks", updated).apply()
+                val bookmarkString =
+                    "$currentBook|$chapterName|$currentIndex|$currentPosition|${System.currentTimeMillis()}"
 
-                // Format time for display
-                val totalSeconds = currentPosition / 1000
-                val minutes = totalSeconds / 60
-                val seconds = totalSeconds % 60
-                val formatted = String.format("%02d:%02d", minutes, seconds)
-                
+                val updated = (prefs.getStringSet(KEY_ALL_BOOKMARKS, emptySet()) ?: emptySet())
+                    .toMutableSet()
+                updated.add(bookmarkString)
+
+                prefs.edit().putStringSet(KEY_ALL_BOOKMARKS, updated).apply()
+
+                val formatted = formatTime(currentPosition)
                 Toast.makeText(requireContext(), "Bookmark added: $formatted", Toast.LENGTH_SHORT).show()
             } else {
                 val reason = when {
@@ -219,10 +185,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 }
                 Toast.makeText(requireContext(), reason, Toast.LENGTH_SHORT).show()
             }
-        }
-
-        view?.findViewById<Button>(R.id.bookmarksButton)?.setOnClickListener {
-            navigateToFragment(BookmarksFragment())
         }
     }
 
@@ -247,9 +209,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private fun updateBookmarksButtonState() {
         val bookmarksButton = view?.findViewById<Button>(R.id.bookmarksButton) ?: return
         val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
-        val allBookmarks = prefs.getStringSet("all_bookmarks", emptySet()) ?: emptySet()
+        val allBookmarks = prefs.getStringSet(KEY_ALL_BOOKMARKS, emptySet()) ?: emptySet()
         val currentBook = prefs.getString("selected_book", null)
-
         val hasBookmarks = currentBook != null && allBookmarks.any { it.startsWith("$currentBook|") }
 
         bookmarksButton.isEnabled = hasBookmarks
@@ -643,6 +604,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private fun startPositionTracking() {
         stopPositionTracking() // Stop any existing tracking
         
+        var saveCounter = 0
+
         positionUpdateRunnable = object : Runnable {
             override fun run() {
                 if (isPlaying && mediaPlayer != null) {

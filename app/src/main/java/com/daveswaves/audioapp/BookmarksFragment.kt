@@ -54,22 +54,32 @@ class BookmarksFragment : Fragment(R.layout.fragment_bookmarks) {
         val recyclerView: RecyclerView = view.findViewById(R.id.bookmarksRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        recyclerView.adapter = BookmarkAdapter(bookmarks) { bookmark ->
-            // Create new MainFragment with bookmark data
-            val bundle = Bundle().apply {
-                putString("bookmark_book", bookmark.book)
-                putString("bookmark_chapter", bookmark.chapter)
-                putInt("bookmark_chapter_index", bookmark.chapterIndex)
-                putInt("bookmark_position", bookmark.position)
+        recyclerView.adapter = BookmarkAdapter(
+            bookmarks.toMutableList(), // make it mutable
+            onRemove = { bookmark ->
+                // remove bookmark from SharedPreferences
+                val updatedSet = bookmarkSet.toMutableSet().apply {
+                    remove("${bookmark.book}|${bookmark.chapter}|${bookmark.chapterIndex}|${bookmark.position}|${bookmark.timestamp}")
+                }
+                prefs.edit().putStringSet("all_bookmarks", updatedSet).apply()
+            },
+            onClick = { bookmark ->
+                // open MainFragment with bookmark data
+                val bundle = Bundle().apply {
+                    putString("bookmark_book", bookmark.book)
+                    putString("bookmark_chapter", bookmark.chapter)
+                    putInt("bookmark_chapter_index", bookmark.chapterIndex)
+                    putInt("bookmark_position", bookmark.position)
+                }
+
+                val newMainFragment = MainFragment().apply {
+                    arguments = bundle
+                }
+
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainer, newMainFragment)
+                    .commit()
             }
-            
-            val newMainFragment = MainFragment().apply {
-                arguments = bundle
-            }
-            
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, newMainFragment)
-                .commit()
-        }
+        )
     }
 }

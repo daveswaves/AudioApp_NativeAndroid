@@ -18,7 +18,7 @@ class RecentAdapter(
     inner class RecentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val bookTitle: TextView = itemView.findViewById(R.id.bookTitle)
         val bookCover: ImageView = itemView.findViewById(R.id.bookCover)
-        val removeButton: Button = itemView.findViewById(R.id.removeButton)
+        val removeButton: Button = itemView.findViewById(R.id.removeRecentsBtn)
 
         init {
             // Handle item tap
@@ -44,7 +44,7 @@ class RecentAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecentViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_book, parent, false)
+            .inflate(R.layout.list_recents, parent, false)
         return RecentViewHolder(view)
     }
 

@@ -96,23 +96,4 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
         }
         return null
     }
-    /* private fun getCoverUri(baseUri: Uri, bookName: String): Uri? {
-        val coversUri = Uri.withAppendedPath(baseUri, "$bookName/.cover.jpg")
-        return coversUri
-        // return BooksFragment().getCoverUri(baseUri, bookName)
-    } */
 }
-
-
-// class RecentFragment : Fragment(R.layout.fragment_recent) {
-
-//     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//         super.onViewCreated(view, savedInstanceState)
-
-//         val closeButton: Button = view.findViewById(R.id.closeButton)
-//         // val closeButton: ImageButton = view.findViewById(R.id.closeButton)
-//         closeButton.setOnClickListener {
-//             parentFragmentManager.popBackStack()
-//         }
-//     }
-// }

@@ -20,6 +20,12 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import kotlin.math.roundToInt
 
+import android.widget.EditText
+import android.view.inputmethod.InputMethodManager
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
+
+
 class MainFragment : Fragment(R.layout.fragment_main) {
 
     // Audio playback state
@@ -130,8 +136,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
-        private fun setButtonClick(id: Int, action: () -> Unit) {
-        view?.findViewById<Button>(id)?.setOnClickListener { action() }
+    private fun setButtonClick(id: Int, action: () -> Unit) {
+        view?.findViewById<View>(id)?.setOnClickListener { action() }
+        // view?.findViewById<Button>(id)?.setOnClickListener { action() }
     }
 
     private fun setupButtonListeners() {
@@ -147,6 +154,62 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         playButton.setOnClickListener {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
         }
+
+        setButtonClick(R.id.searchButton) {
+            val searchInput = view?.findViewById<EditText>(R.id.searchInput)
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+            searchInput?.let {
+                if (it.visibility == View.GONE) {
+                    it.visibility = View.VISIBLE
+                    it.scaleX = 0f  // Start fully contracted
+                    it.alpha = 0f   // Optional: fade in too
+
+                    it.animate()
+                        .scaleX(1f)      // Expand to full width
+                        .alpha(1f)       // Optional: fade in
+                        .setDuration(300)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+
+                    it.requestFocus()
+                    imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
+
+                } else {
+                    it.animate()
+                        .scaleX(0f)     // Contract to 0 width
+                        .alpha(0f)      // Optional: fade out
+                        .setDuration(300)
+                        .setInterpolator(AccelerateInterpolator())
+                        .withEndAction {
+                            it.visibility = View.GONE
+                            it.scaleX = 1f  // Reset for next time
+                            it.alpha = 1f
+                        }
+                        .start()
+
+                    imm.hideSoftInputFromWindow(it.windowToken, 0)
+                }
+            }
+
+        }
+        /* setButtonClick(R.id.searchButton) {
+            val searchInput = view?.findViewById<EditText>(R.id.searchInput)
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+            searchInput?.let {
+                if (it.visibility == View.GONE) {
+                    it.visibility = View.VISIBLE
+                    it.requestFocus()
+                    imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
+                } else {
+                    it.visibility = View.GONE
+                    imm.hideSoftInputFromWindow(it.windowToken, 0)
+                }
+            }
+        } */
+
+        // Toast.makeText(requireContext(), "searchButton clicked!", Toast.LENGTH_SHORT).show()
 
         setButtonClick(R.id.nextButton) { playNextChapter() }
         setButtonClick(R.id.prevButton) { playPreviousChapter() }

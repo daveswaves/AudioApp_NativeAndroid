@@ -91,6 +91,7 @@
         android:layout_height="wrap_content"
         android:hint="Search..."
         android:inputType="text"
+        android:imeOptions="actionSearch"
         android:visibility="gone"
         android:background="@drawable/search_input_background"
         android:padding="6dp"
@@ -100,7 +101,6 @@
         android:layout_marginStart="36dp"
         android:layout_marginTop="56dp"
     />
-    <!-- android:visibility="gone" -->
 
     <!-- Search button -->
     <ImageButton
@@ -109,13 +109,13 @@
         android:layout_height="80dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="8dp"
-        app:tint="?attr/colorOnSurface"
         app:srcCompat="@drawable/ic_search"
         android:scaleType="fitCenter"
         app:layout_constraintTop_toTopOf="@id/buttonRow"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="46dp"
         android:layout_marginEnd="16dp" />
+        <!-- app:tint="?attr/colorOnSurface" -->
 
     <!-- Current Chapter Name -->
     <TextView

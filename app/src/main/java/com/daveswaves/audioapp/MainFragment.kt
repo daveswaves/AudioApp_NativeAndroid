@@ -24,6 +24,7 @@ import android.widget.EditText
 import android.view.inputmethod.InputMethodManager
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
+import android.view.inputmethod.EditorInfo
 
 
 class MainFragment : Fragment(R.layout.fragment_main) {
@@ -192,22 +193,25 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 }
             }
 
-        }
-        /* setButtonClick(R.id.searchButton) {
-            val searchInput = view?.findViewById<EditText>(R.id.searchInput)
-            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            searchInput?.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                    val query = searchInput.text.toString().trim()
 
-            searchInput?.let {
-                if (it.visibility == View.GONE) {
-                    it.visibility = View.VISIBLE
-                    it.requestFocus()
-                    imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
+                    if (query.isNotEmpty()) {
+                        Toast.makeText(requireContext(), "Searching for: $query", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Search is empty", Toast.LENGTH_SHORT).show()
+                    }
+
+                    // Optionally hide the keyboard
+                    imm.hideSoftInputFromWindow(searchInput.windowToken, 0)
+
+                    true // Consumed
                 } else {
-                    it.visibility = View.GONE
-                    imm.hideSoftInputFromWindow(it.windowToken, 0)
+                    false
                 }
             }
-        } */
+        }
 
         // Toast.makeText(requireContext(), "searchButton clicked!", Toast.LENGTH_SHORT).show()
 

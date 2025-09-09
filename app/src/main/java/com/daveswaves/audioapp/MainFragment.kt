@@ -198,7 +198,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                     val query = searchInput.text.toString().trim()
 
                     if (query.isNotEmpty()) {
-                        Toast.makeText(requireContext(), "Searching for: $query", Toast.LENGTH_SHORT).show()
+                        navigateToBooksFragment(query)
                     } else {
                         Toast.makeText(requireContext(), "Search is empty", Toast.LENGTH_SHORT).show()
                     }
@@ -283,7 +283,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         bookmarksButton.isEnabled = hasBookmarks
         bookmarksButton.alpha = if (hasBookmarks) 1.0f else 0.5f // grayed-out effect
     }
-
 
     private fun getAudioBooksFromFolder(folderUri: Uri): List<String> {
         val books = mutableListOf<String>()
@@ -642,10 +641,18 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             ?: "Unknown chapter"
     }
 
-    private fun navigateToBooksFragment() {
+    private fun navigateToBooksFragment(query: String? = null) {
         val uriString = prefs.getString(KEY_AUDIOBOOK_DIR, null)
         val books = uriString?.let { getAudioBooksFromFolder(Uri.parse(it)) } ?: emptyList()
-        navigateToFragment(BooksFragment.newInstance(books))
+
+        // Apply filter if query is provided (case-insensitive match)
+        val filteredBooks = if (!query.isNullOrBlank()) {
+            books.filter { it.contains(query, ignoreCase = true) }
+        } else {
+            books
+        }
+
+        navigateToFragment(BooksFragment.newInstance(filteredBooks, query))
     }
 
     private fun navigateToFragment(fragment: Fragment) {

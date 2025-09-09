@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,11 +14,13 @@ import androidx.recyclerview.widget.RecyclerView
 class BooksFragment : Fragment(R.layout.fragment_books) {
     companion object {
         private const val ARG_BOOKS = "books"
+        private const val ARG_QUERY = "query"
 
-        fun newInstance(books: List<String>): BooksFragment {
+        fun newInstance(books: List<String>, query: String? = null): BooksFragment {
             val fragment = BooksFragment()
             val args = Bundle()
             args.putStringArrayList(ARG_BOOKS, ArrayList(books))
+            args.putString(ARG_QUERY, query)
             fragment.arguments = args
             return fragment
         }
@@ -34,7 +35,11 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         }
 
         val bookList = arguments?.getStringArrayList(ARG_BOOKS) ?: emptyList()
+        val query = arguments?.getString(ARG_QUERY)
+
+        // --- Load shared preferences (app-wide persistent storage) ---
         val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
+        // --- Load base directory URI (points to user-selected audiobook folder) ---
         val baseUriString = prefs.getString("audiobook_dir", null)
         val baseUri = baseUriString?.let { Uri.parse(it) }
 

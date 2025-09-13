@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
@@ -32,6 +33,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     // Audio playback state
     private var mediaPlayer: MediaPlayer? = null
     private var isPlaying = false
+    private var playStop = false
     private var audioFiles: List<Uri> = emptyList()
     private var currentIndex = 0
     private var currentBookName: String? = null
@@ -139,7 +141,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private fun setButtonClick(id: Int, action: () -> Unit) {
         view?.findViewById<View>(id)?.setOnClickListener { action() }
-        // view?.findViewById<Button>(id)?.setOnClickListener { action() }
     }
 
     private fun setupButtonListeners() {
@@ -154,6 +155,16 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
         playButton.setOnClickListener {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
+        }
+
+        setButtonClick(R.id.playBtnStop) {
+            Toast.makeText(requireContext(), "playBtnStop clicked!", Toast.LENGTH_SHORT).show()
+            playStop = !playStop
+
+            val btn = requireView().findViewById<ImageButton>(R.id.playBtnStop)
+
+            if (playStop) btn.setImageResource(R.drawable.ic_play_pause)
+            else btn.setImageResource(R.drawable.ic_play)
         }
 
         setButtonClick(R.id.searchButton) {
@@ -555,7 +566,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         clearSavedPositionForCurrentChapter()
 
         // Auto-advance to next chapter
-        if (currentIndex < audioFiles.size - 1) {
+        if (currentIndex < audioFiles.size - 1 && !playStop) {
             currentIndex = (currentIndex + 1) % audioFiles.size
             playCurrentChapter(restorePosition = false)
         }

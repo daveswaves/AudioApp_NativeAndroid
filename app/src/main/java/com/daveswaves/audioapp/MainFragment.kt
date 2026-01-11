@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 // import androidx.appcompat.app.AppCompatActivity // Required for finishAffinity() [ close app ]
 import androidx.fragment.app.Fragment
+import androidx.cardview.widget.CardView
 import android.widget.ProgressBar
 import kotlin.math.roundToInt
 
@@ -50,6 +51,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     // UI components
     private lateinit var chapterTitle: TextView
     private lateinit var playButton: Button
+    private lateinit var coverCard: CardView
     private lateinit var mainImage: ImageView
     private lateinit var chapterProgressBar: ProgressBar
     private lateinit var timeDisplay: TextView
@@ -124,6 +126,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private fun initializeViews(view: View) {
         chapterTitle = view.findViewById(R.id.chapterTitle)
         playButton = view.findViewById(R.id.playButton)
+        coverCard = view.findViewById(R.id.coverCard)
         mainImage = view.findViewById(R.id.myImageView)
         chapterProgressBar = view.findViewById(R.id.chapterProgressBar)
         timeDisplay = view.findViewById(R.id.timeDisplay)
@@ -163,6 +166,10 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
 
         playButton.setOnClickListener {
+            if (isPlaying) pauseAudio() else startOrResumeAudio()
+        }
+
+        coverCard.setOnClickListener {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
         }
 

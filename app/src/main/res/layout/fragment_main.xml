@@ -65,6 +65,9 @@
     <!-- book cover view port -->
     <androidx.cardview.widget.CardView
         android:id="@+id/coverCard"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:cardCornerRadius="16dp"

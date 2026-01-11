@@ -28,6 +28,15 @@ The objective was to build an audio book app (plays local audio files) that has 
 ## Main View
 ![image](docs/01_main.webp)
 
+### Notes:
+* The book cover image also doubles as a play/pause button. Also updates 'PLAY' / 'PAUSE' on play button.
+* Hold the chapter title also has the same affect as the rewind icon.
+* The play/pause icon pauses the audio at the end of a chapter.
+
+### Bugs
+* Pressing the PAUSE button during play does not update the progress bar.
+* Pressing the rewind icon does not also reset the play position back to the start of a chapter (may need to press play beforehand).
+
 ## Select View
 ![image](docs/02_select.webp)
 

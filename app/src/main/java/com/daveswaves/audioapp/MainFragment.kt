@@ -88,8 +88,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         super.onViewCreated(view, savedInstanceState)
         
         initializeViews(view)
-        playStop = loadPlayStopState()//EDIT_2025-12-16
-        updatePlayButtonUI()//EDIT_2025-12-16
+        playStop = loadPlayStopState()
+        updatePlayButtonUI()
         setupInitialState()
         setupButtonListeners()
 
@@ -177,9 +177,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             mediaPlayer?.seekTo(0)
             saveCurrentPosition()
             resetProgressBar()
+
+            currentBookName?.let { book ->
+                val chapterName = getChapterDisplayName(audioFiles[currentIndex])
+                prefs.edit()
+                    .putInt(getPositionKey(book, chapterName), 0)
+                    .apply()
+            }
         }
 
-        //EDIT_2025-12-16
         setButtonClick(R.id.playBtnStop) {
             playStop = !playStop
             savePlayStopState(playStop)

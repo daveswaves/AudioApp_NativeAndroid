@@ -131,8 +131,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="18dp"/>
 
+
+
     <!-- Play button -->
-    <Button
+    <!-- <Button
         android:id="@+id/playButton"
         android:layout_width="0dp"
         android:layout_height="60dp"
@@ -141,9 +143,38 @@
         app:layout_constraintTop_toBottomOf="@id/chapterTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/playBtnStop"
-        app:layout_constraintWidth_percent="0.60"
+        app:layout_constraintWidth_percent="0.40"
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="0dp"
         android:layout_marginTop="18dp"
-        android:layout_marginStart="40dp"
+        android:layout_marginEnd="2dp"/> -->
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="Play"
+        android:textSize="30sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chapterTitle"
+        app:layout_constraintEnd_toStartOf="@id/rewindButton"
+        app:layout_constraintWidth_percent="0.46"
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="2dp"/>
+    <!-- rewind icon -->
+    <ImageButton
+        android:id="@+id/rewindButton"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="4dp"
+        app:srcCompat="@drawable/ic_rewind"
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toBottomOf="@id/chapterTitle"
+        app:layout_constraintStart_toEndOf="@id/playButton"
+        app:layout_constraintEnd_toStartOf="@id/playBtnStop"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="2dp"/>
     <!-- play/pause icon -->
     <ImageButton
@@ -151,13 +182,14 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="8dp"
+        android:padding="4dp"
         app:srcCompat="@drawable/ic_play"
         android:scaleType="fitCenter"
         app:layout_constraintTop_toBottomOf="@id/chapterTitle"
-        app:layout_constraintStart_toEndOf="@id/playButton"
+        app:layout_constraintStart_toEndOf="@id/rewindButton"
+        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginEnd="0dp"/>
 
     <!-- Previous / Next buttons -->
     <Button
@@ -292,5 +324,18 @@
             android:shadowRadius="2"/>
 
     </FrameLayout>
+
+    <!-- <ImageButton
+        android:id="@+id/closeBtn"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="4dp"
+        app:srcCompat="@drawable/ic_close"
+        app:layout_constraintTop_toBottomOf="@id/progressBarContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="Close"/> -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

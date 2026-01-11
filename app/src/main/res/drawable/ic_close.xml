@@ -1,0 +1,28 @@
+<!-- ic_play.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- circle -->
+    <path
+        android:fillColor="#FFF"
+        android:pathData="M12,2
+            A10,10 0 1,1 12,22
+            A10,10 0 1,1 12,2z"/>
+    <!-- large play triangle -->
+    <path
+        android:fillColor="#000"
+        android:pathData="M8.5,7.1
+            L12,10.6
+            L15.5,7.1
+            L16.9,8.5
+            L13.4,12
+            L16.9,15.5
+            L15.5,16.9
+            L12,13.4
+            L8.5,16.9
+            L7.1,15.5
+            L10.6,12
+            L7.1,8.5z"/>
+</vector>

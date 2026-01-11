@@ -16,16 +16,20 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+// import androidx.appcompat.app.AppCompatActivity // Required for finishAffinity() [ close app ]
 import androidx.fragment.app.Fragment
 import android.widget.ProgressBar
-import android.widget.Toast
 import kotlin.math.roundToInt
+
 
 import android.widget.EditText
 import android.view.inputmethod.InputMethodManager
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
 import android.view.inputmethod.EditorInfo
+
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 
 
 class MainFragment : Fragment(R.layout.fragment_main) {
@@ -34,6 +38,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private var mediaPlayer: MediaPlayer? = null
     private var isPlaying = false
     private var playStop = false
+    // private val KEY_PLAY_STOP = "key_play_stop"//EDIT_2025-12-16
     private var audioFiles: List<Uri> = emptyList()
     private var currentIndex = 0
     private var currentBookName: String? = null
@@ -66,8 +71,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         private const val KEY_POSITION_PREFIX = "position_"
         private const val KEY_CHAPTER_PREFIX = "chapter_"
         private const val KEY_ALL_BOOKMARKS = "all_bookmarks"
+        private const val KEY_PLAY_STOP = "key_play_stop"//EDIT_2025-12-16
         
-        private val SUPPORTED_AUDIO_FORMATS = setOf("mp3", "m4a")
+        private val SUPPORTED_AUDIO_FORMATS = setOf("mp3", "m4a", "m4b", "opus")
         private const val POSITION_UPDATE_INTERVAL = 1000L // Update position every second
     }
 
@@ -80,13 +86,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         super.onViewCreated(view, savedInstanceState)
         
         initializeViews(view)
+        playStop = loadPlayStopState()//EDIT_2025-12-16
+        updatePlayButtonUI()//EDIT_2025-12-16
         setupInitialState()
         setupButtonListeners()
 
         // Handle bookmark navigation
         arguments?.let { bundle ->
             val bookmarkBook = bundle.getString("bookmark_book")
-            val bookmarkChapter = bundle.getString("bookmark_chapter") 
+            // val bookmarkChapter = bundle.getString("bookmark_chapter") 
             val bookmarkChapterIndex = bundle.getInt("bookmark_chapter_index", -1)
             val bookmarkPosition = bundle.getInt("bookmark_position", -1)
             
@@ -98,7 +106,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 
                 // Handle the bookmark seek after everything loads
                 handler.postDelayed({
-                    seekToBookmark(bookmarkBook, bookmarkChapter ?: "", bookmarkChapterIndex, bookmarkPosition)
+                    seekToBookmark(bookmarkBook, bookmarkChapterIndex, bookmarkPosition)
+                    // seekToBookmark(bookmarkBook, bookmarkChapter ?: "", bookmarkChapterIndex, bookmarkPosition)
                 }, 1000) // Give it time to fully initialize
             }
         }
@@ -157,15 +166,33 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             if (isPlaying) pauseAudio() else startOrResumeAudio()
         }
 
+        setButtonClick(R.id.rewindButton) {
+            mediaPlayer?.seekTo(0)
+            saveCurrentPosition()
+            resetProgressBar()
+        }
+
+        //EDIT_2025-12-16
         setButtonClick(R.id.playBtnStop) {
-            Toast.makeText(requireContext(), "playBtnStop clicked!", Toast.LENGTH_SHORT).show()
+            playStop = !playStop
+            savePlayStopState(playStop)
+            updatePlayButtonUI()
+        }
+
+        /* setButtonClick(R.id.playBtnStop) {
+            // Toast.makeText(requireContext(), "playBtnStop clicked!", Toast.LENGTH_SHORT).show()
             playStop = !playStop
 
             val btn = requireView().findViewById<ImageButton>(R.id.playBtnStop)
 
             if (playStop) btn.setImageResource(R.drawable.ic_play_pause)
             else btn.setImageResource(R.drawable.ic_play)
-        }
+        } */
+
+        // setButtonClick(R.id.closeBtn) {
+        //     activity?.finishAffinity()
+        //     requireActivity().moveTaskToBack(true)
+        // }
 
         setButtonClick(R.id.searchButton) {
             val searchInput = view?.findViewById<EditText>(R.id.searchInput)
@@ -252,6 +279,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
                 prefs.edit().putStringSet(KEY_ALL_BOOKMARKS, updated).apply()
 
+                updateBookmarksButtonState()
+                // bookmarksButton.isEnabled = hasBookmarks
+
                 val formatted = formatTime(currentPosition)
                 Toast.makeText(requireContext(), "Bookmark added: $formatted", Toast.LENGTH_SHORT).show()
             } else {
@@ -263,6 +293,32 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 }
                 Toast.makeText(requireContext(), reason, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    //EDIT_2025-12-16
+    private fun savePlayStopState(value: Boolean) {
+        requireContext()
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_PLAY_STOP, value)
+            .apply()
+    }
+    //EDIT_2025-12-16
+    private fun loadPlayStopState(): Boolean {
+        return requireContext()
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(KEY_PLAY_STOP, false)
+    }
+
+    //EDIT_2025-12-16
+    private fun updatePlayButtonUI() {
+        val btn = requireView().findViewById<ImageButton>(R.id.playBtnStop)
+
+        if (playStop) {
+            btn.setImageResource(R.drawable.ic_play_pause)
+        } else {
+            btn.setImageResource(R.drawable.ic_play)
         }
     }
 
@@ -324,7 +380,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         return books
     }
 
-    fun seekToBookmark(bookName: String, chapterName: String, chapterIndex: Int, position: Int) {
+    private fun seekToBookmark(bookName: String, chapterIndex: Int, position: Int) {
+    // private fun seekToBookmark(bookName: String, chapterName: String, chapterIndex: Int, position: Int) {
         val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)
         val currentBook = prefs.getString("selected_book", null)
         
@@ -680,11 +737,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         mediaPlayer = null
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        releaseMediaPlayer()
-    }
-
     // Position tracking methods
     private fun startPositionTracking() {
         stopPositionTracking() // Stop any existing tracking
@@ -729,6 +781,25 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                     .putInt(getPositionKey(bookName, chapterName), position)
                     .putInt(getChapterIndexKey(bookName), currentIndex)
                     .apply()
+                
+                // val allPrefs: Map<String, *> = prefs.all
+                // val debugMessage = allPrefs.entries.joinToString("\n") { (key, value) -> "$key = $value" }
+                // AlertDialog.Builder(requireContext())
+                //     .setTitle("SharedPreferences Data")
+                //     .setMessage(debugMessage)
+                //     .setPositiveButton("OK", null)
+                //     .show()
+
+                // AlertDialog.Builder(requireContext())
+                //     // .setTitle("Debug Info")
+                //     .setMessage("""
+                //         bookName: $bookName
+                //         chapterName: $chapterName
+                //         currentIndex: $currentIndex
+                //         position: $position
+                //     """.trimIndent())
+                //     .setPositiveButton("OK", null)
+                //     .show()
             }
         }
     }
@@ -916,5 +987,10 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         if (isPlaying) {
             startPositionTracking()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        releaseMediaPlayer()
     }
 }

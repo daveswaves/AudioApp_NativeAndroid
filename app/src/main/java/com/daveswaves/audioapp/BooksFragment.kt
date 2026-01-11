@@ -35,7 +35,7 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         }
 
         val bookList = arguments?.getStringArrayList(ARG_BOOKS) ?: emptyList()
-        val query = arguments?.getString(ARG_QUERY)
+        // val query = arguments?.getString(ARG_QUERY)
 
         // --- Load shared preferences (app-wide persistent storage) ---
         val prefs = requireContext().getSharedPreferences("audio_prefs", Context.MODE_PRIVATE)

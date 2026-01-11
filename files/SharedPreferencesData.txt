@@ -1,0 +1,86 @@
+My Android app currently saves data in SharedPreferences (key-value pairs):
+
+all_bookmarks = [UnchartedWithHannahFry|S1E06._The_Happiness_Curve|0|0|1757174987956]
+audiobook_dir = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test
+has_selected_folder = true
+recent_books = [UnHerd, Supertramp, Brief Answers to the Big Questions by Stephen Hawking, UnchartedWithHannaFry, The_Banksy_Story]
+selected_book = UnchartedWithHannahFry
+selected_book_cover = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FUnchartedWithHannahFry%2Fcover.jpg
+
+chapter_Supertramp = 1
+position_Supertramp_Supertramp - The Logical Song - only keys = 4487
+position_Supertramp_Supertramp - The Logical Song = 4487
+position_Supertramp_Take The Long Way Home = 7112
+position_Supertramp_The Logical Song - only keys = 2021
+position_Supertramp_The Logical Song = 108684
+recent_cover_Supertramp = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FSupertramp%2Fcover.jpg
+
+chapter_sideways = 0
+position_sideways_Chasing_Peace_-_1._Wired_for_War = 1955
+recent_cover_sideways = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2Fsideways%2Fcover.jpg
+
+chapter_UnchartedWithHannahFry = 2
+position_UnchartedWithHannahFry_S1E06._The_Happiness_Curve = 17627
+position_UnchartedWithHannahFry_S1E10._Devil_in_the_Detail = 312561
+recent_cover_UnchartedWithHannahFry = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FUnchartedWithHannahFry%2Fcover.jpg
+
+chapter_UnHerd = 0
+position_UnHerd_War_on_science = 404877
+recent_cover_UnHerd = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FUnHerd%2Fcover.jpg
+
+chapter_The_Bankey_Story = 0
+position_The_Bankey_Story_1.The_Mild_Mild_West = 3051
+recent_cover_The_Bankey_Story = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FThe_Bankey_Story%2Fcover.jpg
+
+chapter_Brief Answers to the Big Questions by Stephen Hawking = 2
+position_Brief Answers to the Big Questions by Stephen Hawking_03 Why We Must Ask the Big Questions = 619110
+recent_cover_Brief Answers to the Big Questions by Stephen Hawking = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FBrief%20Answers%20to%20the%20Big%20Questions%20by%20Stephen%20Hawking%2Fcover.jpg
+
+This makes it more difficult to clean up when removing audiobooks. Ideally, an array would be better so that everything related to the audiobook title could be deleted in one go. Eg:
+
+['The_Bankey_Story'][
+	'chapter': 0,
+	'position': etc.
+]
+
+What do you recommend?
+
+
+
+
+
+all_bookmarks = [UnchartedWithHannahFry|S1E06._The_Happiness_Curve|0|0|1757174987956]
+audiobook_dir = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test
+has_selected_folder = true
+recent_books = [UnHerd, Supertramp, Brief Answers to the Big Questions by Stephen Hawking, UnchartedWithHannaFry, The_Banksy_Story]
+selected_book = UnchartedWithHannahFry
+selected_book_cover = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FUnchartedWithHannahFry%2Fcover.jpg
+
+chapter_Supertramp = 1
+position_Supertramp_Supertramp - The Logical Song - only keys = 4487
+position_Supertramp_Supertramp - The Logical Song = 4487
+position_Supertramp_Take The Long Way Home = 7112
+position_Supertramp_The Logical Song - only keys = 2021
+position_Supertramp_The Logical Song = 108684
+recent_cover_Supertramp = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FSupertramp%2Fcover.jpg
+
+chapter_sideways = 0
+position_sideways_Chasing_Peace_-_1._Wired_for_War = 1955
+recent_cover_sideways = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2Fsideways%2Fcover.jpg
+
+chapter_UnchartedWithHannahFry = 2
+position_UnchartedWithHannahFry_S1E06._The_Happiness_Curve = 17627
+position_UnchartedWithHannahFry_S1E10._Devil_in_the_Detail = 312561
+recent_cover_UnchartedWithHannahFry = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FUnchartedWithHannahFry%2Fcover.jpg
+
+chapter_UnHerd = 0
+position_UnHerd_War_on_science = 404877
+recent_cover_UnHerd = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FUnHerd%2Fcover.jpg
+
+chapter_The_Bankey_Story = 0
+position_The_Bankey_Story_1.The_Mild_Mild_West = 3051
+recent_cover_The_Bankey_Story = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FThe_Bankey_Story%2Fcover.jpg
+
+chapter_Brief Answers to the Big Questions by Stephen Hawking = 2
+position_Brief Answers to the Big Questions by Stephen Hawking_03 Why We Must Ask the Big Questions = 619110
+recent_cover_Brief Answers to the Big Questions by Stephen Hawking = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FBrief%20Answers%20to%20the%20Big%20Questions%20by%20Stephen%20Hawking%2Fcover.jpg

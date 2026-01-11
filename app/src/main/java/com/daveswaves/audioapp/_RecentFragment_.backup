@@ -32,13 +32,16 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
         // --- Retrieve list of recent audiobook names (cached as a Set<String>) ---
         val recentNames = prefs.getStringSet("recent_books", emptySet()) ?: emptySet()
 
+        // --- Load base directory URI (points to user-selected audiobook folder) ---
+        val baseUriString = prefs.getString("audiobook_dir", null)
+        val baseUri = baseUriString?.let { Uri.parse(it) }
         
+        // --- Build a list of BookData objects (title + optional cover image) ---
         val recentBooks = recentNames.map { name ->
-            val coverUri = prefs
-                .getString("recent_cover_$name", null)
-                ?.let(Uri::parse)
-            
-            BookData(name, coverUri)
+            BookData(
+                name,
+                baseUri?.let { getCoverUri(it, name) } // Try to resolve "cover.jpg"
+            )
         }.toMutableList()
 
         // --- Setup RecyclerView for displaying recent audiobooks ---
@@ -108,7 +111,7 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
     }
 
     // --- Utility: Resolve the cover image ("cover.jpg") for a given audiobook ---
-    /* private fun getCoverUri(baseUri: Uri, bookName: String): Uri? {
+    private fun getCoverUri(baseUri: Uri, bookName: String): Uri? {
         val resolver = requireContext().contentResolver
         
         // Query for all child documents (subfolders/files) of the base audiobook directory
@@ -155,5 +158,5 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
             }
         }
         return null // Cover not found
-    } */
+    }
 }

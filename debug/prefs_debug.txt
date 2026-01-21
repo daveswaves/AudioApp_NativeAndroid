@@ -1,22 +1,118 @@
+# The current SharedPreferences in my Android app is a mess:
+
 recent_books = [Jazz, To Build a Fire - Jack London, Empire of AI - Karen Hao, The Four - Scott Galloway]
-selected_book_cover = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FEmpire%20of%20AI%20-%20Karen%20Hao%2Fcover.jpg
-selected_book = Empire of AI - Karen Hao
-position_Jazz_Keith Jarrett - Köln Part 1 = 8192
+
 recent_cover_The Four - Scott Galloway = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FThe%20Four%20-%20Scott%20Galloway%2Fcover.jpg
-key_play_stop = true
+recent_cover_Jazz = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FJazz%2Fcover.jpg
+recent_cover_Empire of AI - Karen Hao = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FEmpire%20of%20AI%20-%20Karen%20Hao%2Fcover.jpg
+recent_cover_To Build a Fire - Jack London = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FTo%20Build%20a%20Fire%20-%20Jack%20London%2Fcover.jpg
+
+position_Jazz_Keith Jarrett - Köln Part 1 = 8192
 position_Empire of AI - Karen Hao_00 - Intro = 1877
 position_The Four - Scott Galloway_Ch03 - Apple = 3797349
-recent_cover_Jazz = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FJazz%2Fcover.jpg
-chapter_Jazz = 0
-chapter_The Four - Scott Galloway = 4
 position_The Four - Scott Galloway_Ch01 - The Four = 8556
 position_The Four - Scott Galloway_Ch02 - Amazon = 5484055
-recent_cover_Empire of AI - Karen Hao = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FEmpire%20of%20AI%20-%20Karen%20Hao%2Fcover.jpg
-audiobook_dir = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test
-position_Empire of AI - Karen Hao_01 - Authors Note = 5181
 position_The Four - Scott Galloway_Ch00 - Intro = 2176
-recent_cover_To Build a Fire - Jack London = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FTo%20Build%20a%20Fire%20-%20Jack%20London%2Fcover.jpg
-has_selected_folder = true
-chapter_To Build a Fire - Jack London = 0
+position_Empire of AI - Karen Hao_01 - Authors Note = 5181
 position_To Build a Fire - Jack London_To Build a Fire - Jack London = 104743
+
+chapter_Jazz = 0
+chapter_The Four - Scott Galloway = 4
+chapter_To Build a Fire - Jack London = 0
 chapter_Empire of AI - Karen Hao = 1
+
+selected_book_cover = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test/document/primary%3Aabooks_test%2FEmpire%20of%20AI%20-%20Karen%20Hao%2Fcover.jpg
+selected_book = Empire of AI - Karen Hao
+key_play_stop = true
+audiobook_dir = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test
+has_selected_folder = true
+
+# Needs to be more like the following so that any references to deleted audio files can be easily removed. Can you suggest any improvements on this?
+
+storage = [
+    // Covers can be created from joining audiobook_dir . recent_titles . '.jpg'
+    recent_titles = [
+        Jazz = [
+            chapter = 0,
+            chapter_title = Keith Jarrett - Köln Part 1,
+            position = 8192,
+        ],
+        To Build a Fire - Jack London = [
+            chapter = 0,
+            chapter_title = To Build a Fire - Jack London,
+            position = 104743,
+        ],
+        Empire of AI - Karen Hao = [
+            chapter = 1,
+            chapter_title = 01 - Authors Note,
+            position = 5181
+        ],
+        The Four - Scott Galloway = [
+            chapter = 4,
+            chapter_title = Ch03 - Apple,
+            position = 3797349,
+        ]
+    ],
+    audiobook_dir = content://com.android.externalstorage.documents/tree/primary%3Aabooks_test,
+    key_play_stop = true,
+    has_selected_folder = true,
+    selected_book = Empire of AI - Karen Hao
+    // selected_book_cover not required. Can be deduced from selected_book
+]
+
+# Note: All the references to 'position_The Four - Scott Galloway' are superfluous. Only 1 is required.
+
+###############################
+
+https://gemini.google.com/app/ad92b5499c3a62d6
+
+JSON
+{
+  "audiobook_dir": "content://com.android.externalstorage...",
+  "selected_book_id": "Empire of AI - Karen Hao",
+  "settings": {
+    "key_play_stop": true,
+    "has_selected_folder": true
+  },
+  "recent_books": [
+    {
+      "id": "Jazz",
+      "chapter": 0,
+      "chapter_title": "Keith Jarrett - Köln Part 1",
+      "position": 8192
+    },
+    {
+      "id": "The Four - Scott Galloway",
+      "chapter": 4,
+      "chapter_title": "Ch03 - Apple",
+      "position": 3797349
+    }
+  ]
+}
+
+TIPS:
+Helper function: getCoverUri(bookId)
+Use Kotlin Serialization or Gson to convert JOSN object into a SharedPreferences string.
+
+````````````````````````````````
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AppStorage(
+    val audiobookDir: String,
+    val selectedBookId: String?,
+    val keyPlayStop: Boolean = true,
+    val hasSelectedFolder: Boolean = false,
+    val recentBooks: List<BookProgress> = emptyList()
+)
+
+@Serializable
+data class BookProgress(
+    val id: String, // e.g., "The Four - Scott Galloway"
+    val chapterIndex: Int,
+    val chapterTitle: String,
+    val position: Long
+)
+
+````````````````````````````````
+

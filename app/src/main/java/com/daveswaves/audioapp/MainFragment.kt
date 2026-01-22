@@ -69,8 +69,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         private const val KEY_HAS_SELECTED_FOLDER = "has_selected_folder"
         // private const val KEY_AUDIOBOOK_DIR = "audiobook_dir"
         // private const val KEY_SELECTED_BOOK = "selected_book"
-        private const val KEY_POSITION_PREFIX = "position_"
-        private const val KEY_CHAPTER_PREFIX = "chapter_"
         // private const val KEY_ALL_BOOKMARKS = "all_bookmarks"
         private const val KEY_PLAY_STOP = "key_play_stop"//EDIT_2025-12-16
         
@@ -180,7 +178,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             currentBookName?.let { book ->
                 val chapterName = getChapterDisplayName(audioFiles[currentIndex])
                 prefs.edit()
-                    .putInt(getPositionKey(book, chapterName), 0)
+                    .putInt("position_${book}_$chapterName", 0)
                     .apply()
             }
         }
@@ -766,8 +764,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             
             if (position >= 0) {
                 prefs.edit()
-                    .putInt(getPositionKey(bookName, chapterName), position)
-                    .putInt(getChapterIndexKey(bookName), currentIndex)
+                    .putInt("position_${bookName}_$chapterName", position)
+                    .putInt("chapter_$bookName", currentIndex)
                     .apply()
                 
                 // val allPrefs: Map<String, *> = prefs.all
@@ -800,7 +798,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             return
         }
         
-        val savedChapterIndex = prefs.getInt(getChapterIndexKey(bookName), 0)
+        val savedChapterIndex = prefs.getInt("chapter_$bookName", 0)
         currentIndex = if (savedChapterIndex < audioFiles.size) savedChapterIndex else 0
     }
 
@@ -810,7 +808,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         if (audioFiles.isEmpty() || currentIndex >= audioFiles.size) return 0
         
         val chapterName = getChapterDisplayName(audioFiles[currentIndex])
-        return prefs.getInt(getPositionKey(bookName, chapterName), 0)
+        return prefs.getInt("position_${bookName}_$chapterName", 0)
     }
 
     private fun clearSavedPositionForCurrentChapter() {
@@ -819,17 +817,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         if (audioFiles.isNotEmpty() && currentIndex < audioFiles.size) {
             val chapterName = getChapterDisplayName(audioFiles[currentIndex])
             prefs.edit()
-                .remove(getPositionKey(bookName, chapterName))
+                .remove("position_${bookName}_$chapterName")
                 .apply()
         }
-    }
-
-    private fun getPositionKey(bookName: String, chapterName: String): String {
-        return "$KEY_POSITION_PREFIX${bookName}_$chapterName"
-    }
-
-    private fun getChapterIndexKey(bookName: String): String {
-        return "$KEY_CHAPTER_PREFIX$bookName"
     }
 
     private fun updateProgressBar() {
@@ -925,7 +915,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
                         val chapterName = getChapterDisplayName(audioFiles[currentIndex])
                         prefs.edit()
-                            .putInt(getPositionKey(currentBookName!!, chapterName), newPosition)
+                            .putInt("position_${currentBookName!!}_$chapterName", newPosition)
                             .apply()
 
                         initializeProgressUI(duration, newPosition)

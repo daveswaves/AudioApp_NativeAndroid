@@ -72,14 +72,13 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
                     recentBooks.add(BookData(name, coverUri))
                     updatedRecentNames.add(name)
                 }
-                // !!! NEED A FIX: not working !!!
                 // Remove reference from memory if audio file does not exist
                 else {
                     editor.remove("recent_cover_$name")
-                    editor.remove("${name}_chapter_index")
+                    editor.remove("chapter_$name")
 
                     prefs.all.keys
-                        .filter { it.startsWith("${name}_") }
+                        .filter { it.startsWith("position_${name}_") }
                         .forEach { editor.remove(it) }
                     
                     val allBookmarks = prefs.getStringSet(PrefsKeys.ALL_BOOKMARKS, emptySet()) ?: emptySet()
@@ -99,6 +98,11 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
                     }
                 }
             }
+
+            if (updatedRecentNames.size != recentNames.size) {
+                editor.putStringSet("recent_books", updatedRecentNames)
+            }
+            editor.apply()
         }
         //✅ END NEW CODE BLOCK
 
@@ -131,12 +135,12 @@ class RecentFragment : Fragment(R.layout.fragment_recent) {
                 editor.remove("recent_cover_${removedBook.name}")
 
                 // Remove position + chapter index keys
-                val positionPrefix = "${removedBook.name}_"
+                val positionPrefix = "position_${removedBook.name}_"
                 val allKeys = prefs.all.keys
                 allKeys.filter { it.startsWith(positionPrefix) }.forEach { editor.remove(it) }
 
-                // also explicit keys (if you’re using helpers like getPositionKey/getChapterIndexKey)
-                editor.remove("${removedBook.name}_chapter_index")
+                // Remove chapter index key
+                editor.remove("chapter_${removedBook.name}")
 
                 // Remove bookmarks belonging to this book
                 val allBookmarks = prefs.getStringSet(PrefsKeys.ALL_BOOKMARKS, emptySet())!!.toMutableSet()

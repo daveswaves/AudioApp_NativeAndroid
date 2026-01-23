@@ -65,5 +65,3 @@ The keys for playback position and chapter index have been simplified to literal
 **Location:** `RecentFragment.kt` -> `onViewCreated`
 
 Missing books are now correctly removed from the `recent_books` set and all associated data (position, bookmarks) is purged when the fragment is created or when a user manually removes a book.
-
-## Build Instructions
